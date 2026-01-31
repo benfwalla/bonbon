@@ -33,7 +33,7 @@ async function fetchVideoMetadata(url: string) {
 }
 
 // Fetch full video details including description from YouTube Data API
-async function fetchVideoDetails(videoId: string): Promise<{ description?: string } | null> {
+async function fetchVideoDetails(videoId: string): Promise<{ description?: string; channelId?: string } | null> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) return null;
   
@@ -47,7 +47,34 @@ async function fetchVideoDetails(videoId: string): Promise<{ description?: strin
     
     return {
       description: data.items[0].snippet.description,
+      channelId: data.items[0].snippet.channelId,
     };
+  } catch {
+    return null;
+  }
+}
+
+// Fetch pinned/owner comment when description is empty
+async function fetchOwnerComment(videoId: string, channelId: string): Promise<string | null> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return null;
+  
+  try {
+    // Get top comments sorted by relevance (pinned usually comes first)
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&part=snippet&order=relevance&maxResults=10&key=${apiKey}`
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    
+    // Look for a comment from the channel owner
+    for (const item of data.items || []) {
+      const comment = item.snippet?.topLevelComment?.snippet;
+      if (comment?.authorChannelId?.value === channelId) {
+        return comment.textOriginal || comment.textDisplay;
+      }
+    }
+    return null;
   } catch {
     return null;
   }
@@ -118,13 +145,23 @@ export const fetchMetadata = action({
     // Try to get description from YouTube Data API
     const details = await fetchVideoDetails(args.videoId);
     
-    if (metadata || details) {
+    let description = details?.description;
+    
+    // If description is empty and we have channelId, try to get owner's pinned comment
+    if ((!description || description.trim() === '') && details?.channelId) {
+      const ownerComment = await fetchOwnerComment(args.videoId, details.channelId);
+      if (ownerComment) {
+        description = ownerComment;
+      }
+    }
+    
+    if (metadata || description) {
       await ctx.runMutation(api.recipes.updateMetadata, {
         recipeId: args.recipeId,
         title: metadata?.title,
         channelName: metadata?.channelName,
         thumbnail: metadata?.thumbnail,
-        description: details?.description,
+        description: description || undefined,
       });
     }
   },

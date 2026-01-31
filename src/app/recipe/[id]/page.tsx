@@ -90,7 +90,7 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
       {/* Description */}
       <section className="mb-12">
         <h2 className="font-display text-2xl font-semibold mb-4" style={{ color: 'var(--ink)' }}>
-          Description
+          Recipe Details
         </h2>
         <div className="bg-white/50 border-recipe p-6">
           {recipe.description ? (
@@ -99,11 +99,7 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
             </p>
           ) : (
             <p className="italic" style={{ color: 'var(--ink-light)' }}>
-              No description available yet.
-              <br /><br />
-              <span className="text-sm">
-                To enable automatic description fetching, add a <code className="px-2 py-1 bg-[var(--cream-dark)]">YOUTUBE_API_KEY</code> environment variable.
-              </span>
+              No recipe details found. The video may not have a description or pinned comment with the recipe.
             </p>
           )}
         </div>
