@@ -37,82 +37,81 @@ export default function Home() {
   return (
     <main>
       {/* Header */}
-      <header className="text-center mb-16">
-        <div className="inline-block mb-6">
-          <span className="text-6xl">🍬</span>
+      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--ink)' }}>
+            bonbon
+          </h1>
+          <p className="text-sm italic mt-1" style={{ color: 'var(--ink-light)' }}>
+            Your recipe collection
+          </p>
         </div>
-        <h1 className="font-display text-5xl md:text-7xl font-bold tracking-tight mb-4" style={{ color: 'var(--ink)' }}>
-          bonbon
-        </h1>
-        <p className="text-xl italic" style={{ color: 'var(--ink-light)' }}>
-          Your collection of sweet recipes
-        </p>
       </header>
 
       {/* Add Recipe Form */}
-      <section className="mb-20">
-        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-          <label className="block mb-3 font-display text-lg" style={{ color: 'var(--ink-light)' }}>
+      <section className="mb-12">
+        <form onSubmit={handleSubmit}>
+          <label className="block mb-2 text-sm font-medium" style={{ color: 'var(--ink-light)' }}>
             Paste a YouTube recipe link
           </label>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://youtube.com/watch?v=..."
-              className="flex-1 px-5 py-4 text-lg border-2 rounded-none bg-white/50 focus:outline-none focus:border-[var(--terracotta)] transition-colors"
+              className="flex-1 px-4 py-3 text-base border-2 rounded-none bg-white/50 focus:outline-none focus:border-[var(--terracotta)] transition-colors"
               style={{ borderColor: 'var(--ink)' }}
               disabled={isAdding}
             />
             <button
               type="submit"
               disabled={isAdding || !url}
-              className="px-8 py-4 font-display text-lg font-semibold text-white transition-all hover:translate-y-[-2px] disabled:opacity-50 disabled:hover:translate-y-0"
+              className="px-6 py-3 font-display font-semibold text-white transition-all hover:translate-y-[-2px] disabled:opacity-50 disabled:hover:translate-y-0 whitespace-nowrap"
               style={{ background: 'var(--terracotta)' }}
             >
-              {isAdding ? "Saving..." : "Save"}
+              {isAdding ? "Saving..." : "Save Recipe"}
             </button>
           </div>
           {error && (
-            <p className="mt-3 text-sm" style={{ color: 'var(--terracotta)' }}>{error}</p>
+            <p className="mt-2 text-sm" style={{ color: 'var(--terracotta)' }}>{error}</p>
           )}
         </form>
       </section>
 
       {/* Divider */}
-      <div className="flex items-center gap-6 mb-12">
-        <div className="flex-1 h-px" style={{ background: 'var(--ink-light)' }} />
-        <span className="font-display text-xl" style={{ color: 'var(--ink-light)' }}>
-          {recipes?.length ?? 0} {recipes?.length === 1 ? 'Recipe' : 'Recipes'} Saved
+      <div className="flex items-center gap-4 mb-8">
+        <div className="flex-1 h-px" style={{ background: 'var(--ink-light)', opacity: 0.3 }} />
+        <span className="text-sm font-medium" style={{ color: 'var(--ink-light)' }}>
+          {recipes?.length ?? 0} {recipes?.length === 1 ? 'recipe' : 'recipes'}
         </span>
-        <div className="flex-1 h-px" style={{ background: 'var(--ink-light)' }} />
+        <div className="flex-1 h-px" style={{ background: 'var(--ink-light)', opacity: 0.3 }} />
       </div>
 
       {/* Recipe Grid */}
       {recipes === undefined ? (
-        <div className="text-center py-20 font-display text-xl italic" style={{ color: 'var(--ink-light)' }}>
-          Loading your collection...
+        <div className="text-center py-16 italic" style={{ color: 'var(--ink-light)' }}>
+          Loading...
         </div>
       ) : recipes.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="font-display text-2xl mb-2" style={{ color: 'var(--ink-light)' }}>
-            Your collection is empty
+        <div className="text-center py-16">
+          <p className="text-lg mb-1" style={{ color: 'var(--ink-light)' }}>
+            No recipes yet
           </p>
-          <p className="italic" style={{ color: 'var(--ink-light)' }}>
-            Paste a YouTube link above to save your first recipe
+          <p className="text-sm italic" style={{ color: 'var(--ink-light)' }}>
+            Paste a YouTube link above to start
           </p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid gap-4 sm:gap-6 sm:grid-cols-2">
           {recipes.map((recipe) => (
             <Link
               key={recipe._id}
               href={`/recipe/${recipe._id}`}
-              className="recipe-card block bg-white border-recipe p-4 group"
+              className="recipe-card block bg-white border border-[var(--ink)] p-3 sm:p-4 group"
             >
               {recipe.thumbnail && (
-                <div className="relative aspect-video mb-4 overflow-hidden">
+                <div className="relative aspect-video mb-3 overflow-hidden">
                   <Image
                     src={recipe.thumbnail}
                     alt={recipe.title || "Recipe thumbnail"}
@@ -121,26 +120,23 @@ export default function Home() {
                   />
                 </div>
               )}
-              <h3 className="font-display text-xl font-semibold leading-tight mb-2 line-clamp-2" style={{ color: 'var(--ink)' }}>
+              <h3 className="font-display text-base sm:text-lg font-semibold leading-snug mb-1 line-clamp-2" style={{ color: 'var(--ink)' }}>
                 {recipe.title || "Untitled Recipe"}
               </h3>
               {recipe.channelName && (
-                <p className="text-sm italic" style={{ color: 'var(--ink-light)' }}>
-                  by {recipe.channelName}
+                <p className="text-xs sm:text-sm" style={{ color: 'var(--ink-light)' }}>
+                  {recipe.channelName}
                 </p>
               )}
-              <p className="mt-4 text-xs tracking-wide uppercase" style={{ color: 'var(--terracotta)' }}>
-                View Recipe →
-              </p>
             </Link>
           ))}
         </div>
       )}
 
       {/* Footer */}
-      <footer className="mt-24 pt-8 border-t text-center" style={{ borderColor: 'var(--ink-light)' }}>
-        <p className="text-sm" style={{ color: 'var(--ink-light)' }}>
-          Made with 🦞 by OpenClaw
+      <footer className="mt-16 pt-6 border-t text-center" style={{ borderColor: 'var(--ink-light)', opacity: 0.3 }}>
+        <p className="text-xs" style={{ color: 'var(--ink-light)' }}>
+          bonbon
         </p>
       </footer>
     </main>

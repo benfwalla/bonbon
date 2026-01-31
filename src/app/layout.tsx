@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen">
         <ConvexClientProvider>
-          <div className="max-w-5xl mx-auto px-6 py-12">
+          <div className="max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
             {children}
           </div>
         </ConvexClientProvider>
