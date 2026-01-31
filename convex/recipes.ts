@@ -148,23 +148,24 @@ export const fetchMetadata = action({
     // Try to get description from YouTube Data API
     const details = await fetchVideoDetails(args.videoId);
     
-    let description = details?.description;
+    // Get description (may be empty string)
+    const description = details?.description?.trim() || undefined;
     
-    // If description is empty and we have channelId, try to get owner's pinned comment
-    if ((!description || description.trim() === '') && details?.channelId) {
-      const ownerComment = await fetchOwnerComment(args.videoId, details.channelId);
-      if (ownerComment) {
-        description = ownerComment;
-      }
+    // Always try to get owner's pinned comment if we have channelId
+    let ownerComment: string | undefined;
+    if (details?.channelId) {
+      const comment = await fetchOwnerComment(args.videoId, details.channelId);
+      ownerComment = comment || undefined;
     }
     
-    if (metadata || description) {
+    if (metadata || description || ownerComment) {
       await ctx.runMutation(api.recipes.updateMetadata, {
         recipeId: args.recipeId,
         title: metadata?.title,
         channelName: metadata?.channelName,
         thumbnail: metadata?.thumbnail,
-        description: description || undefined,
+        description,
+        ownerComment,
       });
     }
   },
@@ -177,6 +178,7 @@ export const updateMetadata = mutation({
     channelName: v.optional(v.string()),
     thumbnail: v.optional(v.string()),
     description: v.optional(v.string()),
+    ownerComment: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { recipeId, ...updates } = args;

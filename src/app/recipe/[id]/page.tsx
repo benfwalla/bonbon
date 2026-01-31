@@ -87,22 +87,49 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
         </div>
       </section>
 
-      {/* Description */}
-      <section className="mb-12">
-        <h2 className="font-display text-2xl font-semibold mb-4" style={{ color: 'var(--ink)' }}>
-          Recipe Details
-        </h2>
-        <div className="bg-white/50 border-recipe p-6">
-          {recipe.description ? (
-            <p className="whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--ink)' }}>
-              {recipe.description}
-            </p>
-          ) : (
-            <p className="italic" style={{ color: 'var(--ink-light)' }}>
-              No recipe details found. The video may not have a description or pinned comment with the recipe.
-            </p>
-          )}
-        </div>
+      {/* Recipe Details */}
+      <section className="mb-12 space-y-6">
+        {/* Description */}
+        {recipe.description && (
+          <div>
+            <h2 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--ink)' }}>
+              Description
+            </h2>
+            <div className="bg-white/50 border border-[var(--ink)] p-4 sm:p-6">
+              <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base" style={{ color: 'var(--ink)' }}>
+                {recipe.description}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Owner's Pinned Comment */}
+        {recipe.ownerComment && (
+          <div>
+            <h2 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--ink)' }}>
+              {recipe.description ? "From the Creator" : "Recipe Details"}
+            </h2>
+            <div className="bg-white/50 border border-[var(--ink)] p-4 sm:p-6">
+              <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base" style={{ color: 'var(--ink)' }}>
+                {recipe.ownerComment}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* No details available */}
+        {!recipe.description && !recipe.ownerComment && (
+          <div>
+            <h2 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--ink)' }}>
+              Recipe Details
+            </h2>
+            <div className="bg-white/50 border border-[var(--ink)] p-4 sm:p-6">
+              <p className="italic text-sm" style={{ color: 'var(--ink-light)' }}>
+                No recipe details found. This video doesn't have a description or pinned comment from the creator.
+              </p>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Original Link */}

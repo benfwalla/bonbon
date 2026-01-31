@@ -7,6 +7,7 @@ export default defineSchema({
     videoId: v.string(),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
+    ownerComment: v.optional(v.string()),
     thumbnail: v.optional(v.string()),
     channelName: v.optional(v.string()),
     channelId: v.optional(v.string()),
