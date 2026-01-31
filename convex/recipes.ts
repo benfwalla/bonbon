@@ -4,12 +4,15 @@ import { api } from "./_generated/api";
 
 // Extract video ID from various YouTube URL formats
 function extractVideoId(url: string): string | null {
+  // Normalize mobile URLs
+  const normalizedUrl = url.replace('m.youtube.com', 'youtube.com');
+  
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
   ];
   
   for (const pattern of patterns) {
-    const match = url.match(pattern);
+    const match = normalizedUrl.match(pattern);
     if (match) return match[1];
   }
   return null;

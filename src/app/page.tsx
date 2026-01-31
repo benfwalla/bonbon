@@ -17,7 +17,7 @@ export default function Home() {
     e.preventDefault();
     setError("");
 
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+    const youtubeRegex = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\/.+/;
     if (!youtubeRegex.test(url)) {
       setError("Please enter a valid YouTube URL");
       return;
