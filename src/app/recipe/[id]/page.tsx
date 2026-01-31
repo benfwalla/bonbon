@@ -89,7 +89,7 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
 
       {/* Recipe Details */}
       <section className="mb-12 space-y-6">
-        {/* Description */}
+        {/* Description - only shows if exists */}
         {recipe.description && (
           <div>
             <h2 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--ink)' }}>
@@ -103,29 +103,15 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
           </div>
         )}
         
-        {/* Owner's Pinned Comment */}
+        {/* Pinned Comment - only shows if exists */}
         {recipe.ownerComment && (
           <div>
             <h2 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--ink)' }}>
-              {recipe.description ? "From the Creator" : "Recipe Details"}
+              Pinned Comment
             </h2>
             <div className="bg-white/50 border border-[var(--ink)] p-4 sm:p-6">
               <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base" style={{ color: 'var(--ink)' }}>
                 {recipe.ownerComment}
-              </p>
-            </div>
-          </div>
-        )}
-        
-        {/* No details available */}
-        {!recipe.description && !recipe.ownerComment && (
-          <div>
-            <h2 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--ink)' }}>
-              Recipe Details
-            </h2>
-            <div className="bg-white/50 border border-[var(--ink)] p-4 sm:p-6">
-              <p className="italic text-sm" style={{ color: 'var(--ink-light)' }}>
-                No recipe details found. This video doesn't have a description or pinned comment from the creator.
               </p>
             </div>
           </div>
