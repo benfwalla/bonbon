@@ -32,10 +32,38 @@ async function fetchVideoMetadata(url: string) {
   }
 }
 
+// Fetch full video details including description from YouTube Data API
+async function fetchVideoDetails(videoId: string): Promise<{ description?: string } | null> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return null;
+  
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${apiKey}`
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data.items?.[0]?.snippet) return null;
+    
+    return {
+      description: data.items[0].snippet.description,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export const list = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db.query("recipes").order("desc").collect();
+  },
+});
+
+export const get = query({
+  args: { id: v.id("recipes") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });
 
@@ -74,6 +102,7 @@ export const add = mutation({
     await ctx.scheduler.runAfter(0, api.recipes.fetchMetadata, {
       recipeId,
       url: normalizedUrl,
+      videoId,
     });
 
     return recipeId;
@@ -81,15 +110,21 @@ export const add = mutation({
 });
 
 export const fetchMetadata = action({
-  args: { recipeId: v.id("recipes"), url: v.string() },
+  args: { recipeId: v.id("recipes"), url: v.string(), videoId: v.string() },
   handler: async (ctx, args) => {
+    // Get basic metadata from oEmbed
     const metadata = await fetchVideoMetadata(args.url);
-    if (metadata) {
+    
+    // Try to get description from YouTube Data API
+    const details = await fetchVideoDetails(args.videoId);
+    
+    if (metadata || details) {
       await ctx.runMutation(api.recipes.updateMetadata, {
         recipeId: args.recipeId,
-        title: metadata.title,
-        channelName: metadata.channelName,
-        thumbnail: metadata.thumbnail,
+        title: metadata?.title,
+        channelName: metadata?.channelName,
+        thumbnail: metadata?.thumbnail,
+        description: details?.description,
       });
     }
   },
@@ -101,10 +136,15 @@ export const updateMetadata = mutation({
     title: v.optional(v.string()),
     channelName: v.optional(v.string()),
     thumbnail: v.optional(v.string()),
+    description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { recipeId, ...updates } = args;
-    await ctx.db.patch(recipeId, updates);
+    // Filter out undefined values
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, v]) => v !== undefined)
+    );
+    await ctx.db.patch(recipeId, cleanUpdates);
   },
 });
 
