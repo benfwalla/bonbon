@@ -138,7 +138,7 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
             Cook
           </Link>
           <Link
-            href={`/recipe/${id}/cook`}
+            href={`/recipe/${id}/cook?chat=true`}
             className="flex items-center gap-2 px-5 py-3 font-display font-semibold transition-all hover:translate-y-[-2px] rounded-lg border-2"
             style={{ borderColor: 'var(--ink)', color: 'var(--ink)' }}
           >

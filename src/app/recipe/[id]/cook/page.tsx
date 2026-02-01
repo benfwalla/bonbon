@@ -4,7 +4,8 @@ import { use, useState, useEffect, useRef } from "react";
 import { useAction, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Drawer } from "vaul";
 import { 
   X, 
   CaretLeft, 
@@ -18,12 +19,13 @@ import {
 export default function CookModePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const recipe = useQuery(api.recipes.get, { id: id as Id<"recipes"> });
   const sendMessage = useAction(api.ai.chat);
   
   const [currentStep, setCurrentStep] = useState(0);
-  const [showIngredients, setShowIngredients] = useState(true);
-  const [showChat, setShowChat] = useState(false);
+  const [showIngredients, setShowIngredients] = useState(false);
+  const [showChat, setShowChat] = useState(searchParams.get('chat') === 'true');
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
@@ -45,7 +47,6 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
 
     requestWakeLock();
 
-    // Re-acquire on visibility change
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         requestWakeLock();
@@ -62,11 +63,11 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
   // Scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [recipe?.chatHistory]);
+  }, [recipe?.chatHistory, showChat]);
 
   if (recipe === undefined) {
     return (
-      <div className="min-h-screen bg-[var(--cream)] flex items-center justify-center">
+      <div className="h-dvh bg-[var(--ink)] flex items-center justify-center">
         <CookingPot size={48} className="animate-pulse" style={{ color: 'var(--terracotta)' }} />
       </div>
     );
@@ -111,87 +112,85 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
   };
 
   return (
-    <div className="min-h-screen bg-[var(--ink)] text-white flex flex-col">
-      {/* Header */}
-      <header className="flex items-center justify-between p-4 border-b border-white/10">
+    <div className="h-dvh bg-[var(--ink)] text-white flex flex-col overflow-hidden">
+      {/* Header - fixed */}
+      <header className="flex-none flex items-center justify-between p-4 border-b border-white/10">
         <button
           onClick={() => router.push(`/recipe/${id}`)}
-          className="p-2 hover:bg-white/10 rounded-full transition-colors"
+          className="p-2 -m-2 hover:bg-white/10 rounded-full transition-colors"
         >
           <X size={24} />
         </button>
-        <h1 className="font-display font-semibold text-lg truncate px-4">
+        <h1 className="font-display font-semibold text-base sm:text-lg truncate px-2 text-center flex-1">
           {aiRecipe.cleanTitle || aiRecipe.title || recipe.title}
         </h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowIngredients(!showIngredients)}
-            className={`p-2 rounded-full transition-colors ${showIngredients ? 'bg-[var(--sage)] text-[var(--ink)]' : 'hover:bg-white/10'}`}
-          >
-            <ListChecks size={24} />
-          </button>
-          <button
-            onClick={() => setShowChat(!showChat)}
-            className={`p-2 rounded-full transition-colors ${showChat ? 'bg-[var(--terracotta)]' : 'hover:bg-white/10'}`}
-          >
-            <ChatCircle size={24} />
-          </button>
-        </div>
+        <button
+          onClick={() => setShowIngredients(!showIngredients)}
+          className={`p-2 -m-2 rounded-full transition-colors ${showIngredients ? 'bg-[var(--sage)] text-[var(--ink)]' : 'hover:bg-white/10'}`}
+        >
+          <ListChecks size={24} />
+        </button>
       </header>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Ingredients panel (collapsible) */}
-        {showIngredients && (
-          <div className="p-4 border-b border-white/10 bg-white/5 max-h-[30vh] overflow-y-auto">
-            <h2 className="font-display font-semibold mb-3 text-sm uppercase tracking-wide text-white/60">
-              Ingredients
-            </h2>
-            <ul className="space-y-2">
-              {aiRecipe.ingredients.map((ing, i) => (
-                <li key={i}>
-                  <button
-                    onClick={() => toggleIngredient(i)}
-                    className={`text-left w-full flex items-start gap-3 ${checkedIngredients.has(i) ? 'text-white/40 line-through' : ''}`}
-                  >
-                    <span className={`mt-1 w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center ${checkedIngredients.has(i) ? 'bg-[var(--sage)] border-[var(--sage)]' : 'border-white/40'}`}>
-                      {checkedIngredients.has(i) && <span className="text-[var(--ink)] text-xs">✓</span>}
-                    </span>
-                    <span className="text-sm">{ing}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      {/* Main content - fills remaining space */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Ingredients drawer */}
+        <Drawer.Root open={showIngredients} onOpenChange={setShowIngredients}>
+          <Drawer.Portal>
+            <Drawer.Overlay className="fixed inset-0 bg-black/60 z-40" />
+            <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-[var(--ink)] border-t border-white/10 rounded-t-2xl max-h-[70dvh] flex flex-col">
+              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/20 mt-3 mb-2" />
+              <Drawer.Title className="font-display font-semibold px-4 pb-3 text-white border-b border-white/10">
+                Ingredients
+              </Drawer.Title>
+              <div className="flex-1 overflow-y-auto p-4">
+                <ul className="space-y-3">
+                  {aiRecipe.ingredients.map((ing, i) => (
+                    <li key={i}>
+                      <button
+                        onClick={() => toggleIngredient(i)}
+                        className={`text-left w-full flex items-start gap-3 ${checkedIngredients.has(i) ? 'text-white/40 line-through' : 'text-white'}`}
+                      >
+                        <span className={`mt-0.5 w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center ${checkedIngredients.has(i) ? 'bg-[var(--sage)] border-[var(--sage)]' : 'border-white/40'}`}>
+                          {checkedIngredients.has(i) && <span className="text-[var(--ink)] text-xs font-bold">✓</span>}
+                        </span>
+                        <span>{ing}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
 
-        {/* Current step */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        {/* Current step - centered */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center min-h-0">
           <div className="text-sm uppercase tracking-wide text-white/40 mb-4">
             Step {currentStep + 1} of {totalSteps}
           </div>
-          <p className="text-xl sm:text-2xl leading-relaxed max-w-lg">
+          <p className="text-xl sm:text-2xl md:text-3xl leading-relaxed max-w-lg">
             {instructions[currentStep]}
           </p>
         </div>
 
-        {/* Step navigation */}
-        <div className="flex items-center justify-between p-4 border-t border-white/10">
+        {/* Step navigation - fixed at bottom */}
+        <div className="flex-none flex items-center justify-between p-4 border-t border-white/10 gap-2">
           <button
             onClick={handlePrev}
             disabled={currentStep === 0}
-            className="flex items-center gap-2 px-6 py-3 bg-white/10 rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
+            className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-3 bg-white/10 rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
           >
             <CaretLeft size={20} />
-            <span className="font-display">Back</span>
+            <span className="font-display hidden sm:inline">Back</span>
           </button>
           
-          <div className="flex gap-1">
+          <div className="flex gap-1.5 flex-wrap justify-center max-w-[40%]">
             {instructions.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentStep(i)}
-                className={`w-2 h-2 rounded-full transition-colors ${i === currentStep ? 'bg-[var(--terracotta)]' : 'bg-white/20'}`}
+                className={`w-2.5 h-2.5 rounded-full transition-colors ${i === currentStep ? 'bg-[var(--terracotta)]' : 'bg-white/20'}`}
               />
             ))}
           </div>
@@ -199,77 +198,90 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
           <button
             onClick={handleNext}
             disabled={currentStep === totalSteps - 1}
-            className="flex items-center gap-2 px-6 py-3 bg-[var(--terracotta)] rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+            className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-3 bg-[var(--terracotta)] rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 transition-all"
           >
-            <span className="font-display">Next</span>
+            <span className="font-display hidden sm:inline">Next</span>
             <CaretRight size={20} />
           </button>
         </div>
       </div>
 
-      {/* Chat panel (slide up) */}
-      {showChat && (
-        <div className="absolute inset-x-0 bottom-0 bg-[var(--ink)] border-t border-white/10 flex flex-col" style={{ height: '50vh' }}>
-          <div className="flex items-center justify-between p-3 border-b border-white/10">
-            <h2 className="font-display font-semibold">Recipe Chat</h2>
-            <button onClick={() => setShowChat(false)} className="p-1 hover:bg-white/10 rounded">
-              <X size={20} />
-            </button>
-          </div>
-          
-          {/* Chat messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {(!recipe.chatHistory || recipe.chatHistory.length === 0) && (
-              <p className="text-white/40 text-sm text-center">
-                Ask anything about this recipe
-              </p>
-            )}
-            {recipe.chatHistory?.map((msg, i) => (
-              <div
-                key={i}
-                className={`text-sm ${msg.role === 'user' ? 'text-right' : 'text-left'}`}
-              >
-                <span className={`inline-block px-3 py-2 rounded-2xl max-w-[85%] ${
-                  msg.role === 'user' 
-                    ? 'bg-[var(--terracotta)] text-white' 
-                    : 'bg-white/10 text-white'
-                }`}>
-                  {msg.content}
-                </span>
-              </div>
-            ))}
-            {chatLoading && (
-              <div className="text-left">
-                <span className="inline-block px-3 py-2 rounded-2xl bg-white/10 text-white/60 text-sm">
-                  ...
-                </span>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
+      {/* Chat FAB */}
+      <button
+        onClick={() => setShowChat(true)}
+        className="fixed bottom-24 right-4 w-14 h-14 bg-[var(--terracotta)] rounded-full flex items-center justify-center shadow-lg hover:brightness-110 transition-all z-30"
+      >
+        <ChatCircle size={28} weight="fill" />
+      </button>
 
-          {/* Chat input */}
-          <div className="p-3 border-t border-white/10">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
-                placeholder="Ask about substitutes, tips..."
-                className="flex-1 bg-white/10 rounded-full px-4 py-2 text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--terracotta)]"
-              />
-              <button
-                onClick={handleSendChat}
-                disabled={!chatInput.trim() || chatLoading}
-                className="p-2 bg-[var(--terracotta)] rounded-full disabled:opacity-50 hover:brightness-110 transition-all"
-              >
-                <PaperPlaneTilt size={20} />
+      {/* Chat drawer */}
+      <Drawer.Root open={showChat} onOpenChange={setShowChat}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 bg-black/60 z-40" />
+          <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-[var(--ink)] border-t border-white/10 rounded-t-2xl h-[70dvh] flex flex-col">
+            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/20 mt-3 mb-2" />
+            <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10">
+              <Drawer.Title className="font-display font-semibold text-white">Recipe Chat</Drawer.Title>
+              <button onClick={() => setShowChat(false)} className="p-1 hover:bg-white/10 rounded text-white/60">
+                <X size={20} />
               </button>
             </div>
-          </div>
-        </div>
-      )}
+            
+            {/* Chat messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {(!recipe.chatHistory || recipe.chatHistory.length === 0) && (
+                <p className="text-white/40 text-sm text-center py-8">
+                  Ask anything about this recipe
+                </p>
+              )}
+              {recipe.chatHistory?.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`${msg.role === 'user' ? 'text-right' : 'text-left'}`}
+                >
+                  <span className={`inline-block px-4 py-2.5 rounded-2xl max-w-[85%] text-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-[var(--terracotta)] text-white' 
+                      : 'bg-white/10 text-white'
+                  }`}>
+                    {msg.content}
+                  </span>
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="text-left">
+                  <span className="inline-block px-4 py-2.5 rounded-2xl bg-white/10 text-white/60 text-sm">
+                    •••
+                  </span>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Chat input */}
+            <div className="flex-none p-3 border-t border-white/10">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendChat()}
+                  placeholder="Ask about substitutes, tips..."
+                  className="flex-1 bg-white/10 rounded-full px-4 py-3 text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--terracotta)] text-white"
+                  autoComplete="off"
+                />
+                <button
+                  onClick={handleSendChat}
+                  disabled={!chatInput.trim() || chatLoading}
+                  className="p-3 bg-[var(--terracotta)] rounded-full disabled:opacity-50 hover:brightness-110 transition-all"
+                >
+                  <PaperPlaneTilt size={20} />
+                </button>
+              </div>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
     </div>
   );
 }
