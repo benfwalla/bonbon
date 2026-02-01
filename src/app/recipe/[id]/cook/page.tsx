@@ -159,7 +159,7 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
       </div>
 
       {/* Bottom toolbar */}
-      <div className="flex-none flex items-center justify-between px-6 py-4 safe-bottom">
+      <div className="flex-none flex items-center justify-between px-6 pt-4 pb-8 mb-[env(safe-area-inset-bottom)]">
         {/* Ingredients button */}
         <button
           onClick={() => setShowIngredients(true)}
