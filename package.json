@@ -16,6 +16,7 @@
     "openai": "^6.17.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-swipeable": "^7.0.2",
     "vaul": "^1.1.2",
     "youtube-transcript": "^1.2.1"
   },

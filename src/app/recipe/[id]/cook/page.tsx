@@ -15,6 +15,7 @@ import {
   CookingPot,
   ListChecks
 } from "@phosphor-icons/react";
+import { useSwipeable } from "react-swipeable";
 
 export default function CookModePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -85,6 +86,15 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
   const handlePrev = () => setCurrentStep(Math.max(0, currentStep - 1));
   const handleNext = () => setCurrentStep(Math.min(totalSteps - 1, currentStep + 1));
 
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => handleNext(),
+    onSwipedRight: () => handlePrev(),
+    trackMouse: false,
+    trackTouch: true,
+    delta: 50,
+    preventScrollOnSwipe: true,
+  });
+
   const handleSendChat = async () => {
     if (!chatInput.trim() || chatLoading) return;
     
@@ -128,7 +138,7 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
       </header>
 
       {/* Main content with side navigation */}
-      <div className="flex-1 flex items-center justify-center relative min-h-0 px-4">
+      <div {...swipeHandlers} className="flex-1 flex items-center justify-center relative min-h-0 px-4">
         {/* Left arrow */}
         <button
           onClick={handlePrev}
