@@ -1,9 +1,9 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-// NOTE: This deployment is shared with fitclaw - include both schemas
+// NOTE: This deployment is shared with bonbon - include both schemas
 export default defineSchema({
-  // ========== BONBON TABLES ==========
+  // ========== BONBON TABLES (DO NOT MODIFY) ==========
   recipes: defineTable({
     url: v.string(),
     videoId: v.string(),
@@ -40,60 +40,66 @@ export default defineSchema({
 
   // ========== FITCLAW TABLES ==========
   
+  // User profile and settings
   fitUser: defineTable({
     name: v.optional(v.string()),
-    goals: v.optional(v.array(v.string())),
-    experienceLevel: v.optional(v.string()),
-    preferredDuration: v.optional(v.number()),
-    notes: v.optional(v.string()),
+    goals: v.optional(v.array(v.string())), // ["build muscle", "lose fat", "maintain"]
+    experienceLevel: v.optional(v.string()), // beginner, intermediate, advanced
+    preferredDuration: v.optional(v.number()), // minutes
+    notes: v.optional(v.string()), // any preferences
   }),
 
+  // Equipment inventory
   fitEquipment: defineTable({
     name: v.string(),
-    category: v.string(),
-    available: v.boolean(),
+    category: v.string(), // "dumbbells", "machines", "cables", "barbells", "cardio", "bodyweight", "other"
+    available: v.boolean(), // currently available
     notes: v.optional(v.string()),
   }).index("by_category", ["category"]),
 
+  // Exercise definitions (reference data)
   fitExercises: defineTable({
     name: v.string(),
-    muscleGroups: v.array(v.string()),
-    equipment: v.array(v.string()),
-    difficulty: v.string(),
+    muscleGroups: v.array(v.string()), // ["chest", "triceps"]
+    equipment: v.array(v.string()), // ["dumbbells", "bench"]
+    difficulty: v.string(), // easy, medium, hard
     instructions: v.optional(v.string()),
-    isCompound: v.boolean(),
+    isCompound: v.boolean(), // true for squats, false for curls
   }).index("by_muscle", ["muscleGroups"]),
 
+  // Completed workouts
   fitWorkouts: defineTable({
-    date: v.string(),
-    name: v.optional(v.string()),
-    duration: v.optional(v.number()),
+    date: v.string(), // ISO date
+    name: v.optional(v.string()), // "Push Day", "Full Body"
+    duration: v.optional(v.number()), // minutes
     notes: v.optional(v.string()),
     exercises: v.array(v.object({
       name: v.string(),
       muscleGroups: v.array(v.string()),
       sets: v.array(v.object({
         reps: v.number(),
-        weight: v.optional(v.number()),
+        weight: v.optional(v.number()), // lbs
         notes: v.optional(v.string()),
       })),
     })),
   }).index("by_date", ["date"]),
 
+  // Chat history with AI trainer
   fitChat: defineTable({
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
     timestamp: v.number(),
-    workoutId: v.optional(v.id("fitWorkouts")),
+    workoutId: v.optional(v.id("fitWorkouts")), // if this message generated/modified a workout
   }).index("by_timestamp", ["timestamp"]),
 
+  // Current workout in progress
   fitCurrentWorkout: defineTable({
     startedAt: v.number(),
     exercises: v.array(v.object({
       name: v.string(),
       muscleGroups: v.array(v.string()),
       targetSets: v.number(),
-      targetReps: v.string(),
+      targetReps: v.string(), // "8-12" or "10"
       suggestedWeight: v.optional(v.number()),
       completedSets: v.array(v.object({
         reps: v.number(),

@@ -169,8 +169,8 @@ export const fetchMetadata = action({
       });
     }
 
-    // Schedule AI recipe extraction (runs in Node runtime from ai.ts)
-    await ctx.scheduler.runAfter(0, api.ai.extractAIRecipe, {
+    // Schedule AI recipe extraction (runs in Node runtime from recipeAi.ts)
+    await ctx.scheduler.runAfter(0, api.recipeAi.extractAIRecipe, {
       recipeId: args.recipeId,
     });
   },
@@ -230,7 +230,7 @@ export const triggerAIExtraction = mutation({
       aiRecipeStatus: "pending",
       aiRecipeError: undefined,
     });
-    await ctx.scheduler.runAfter(0, api.ai.extractAIRecipe, {
+    await ctx.scheduler.runAfter(0, api.recipeAi.extractAIRecipe, {
       recipeId: args.recipeId,
     });
   },
