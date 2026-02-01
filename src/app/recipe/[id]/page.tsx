@@ -28,7 +28,7 @@ function CollapsibleSection({
           {title}
         </h3>
         <span 
-          className="text-xl transition-transform duration-200"
+          className="text-xs transition-transform duration-200"
           style={{ 
             color: 'var(--ink-light)',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
@@ -239,9 +239,6 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
               </div>
             )}
 
-            <p className="mt-8 pt-4 border-t border-[var(--ink-light)]/30 text-xs" style={{ color: 'var(--ink-light)' }}>
-              ✨ Recipe extracted by AI from video transcript and description
-            </p>
           </div>
         )}
 
@@ -295,7 +292,7 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
           className="inline-flex items-center gap-3 px-6 py-3 font-display font-semibold text-white transition-all hover:translate-y-[-2px]"
           style={{ background: 'var(--terracotta)' }}
         >
-          Watch on YouTube ↗
+          Watch on YouTube
         </a>
       </section>
 
@@ -305,11 +302,10 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
       {/* Actions */}
       <section className="flex justify-between items-center">
         <p className="text-sm" style={{ color: 'var(--ink-light)' }}>
-          Saved on {new Date(recipe._creationTime).toLocaleDateString('en-US', { 
-            weekday: 'long',
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          Saved {new Date(recipe._creationTime).toLocaleDateString('en-US', { 
+            month: 'numeric', 
+            day: 'numeric',
+            year: '2-digit'
           })}
         </p>
         <button
