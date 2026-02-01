@@ -168,6 +168,11 @@ export const fetchMetadata = action({
         ownerComment,
       });
     }
+
+    // Schedule AI recipe extraction (runs in Node runtime from ai.ts)
+    await ctx.scheduler.runAfter(0, api.ai.extractAIRecipe, {
+      recipeId: args.recipeId,
+    });
   },
 });
 
@@ -194,5 +199,61 @@ export const remove = mutation({
   args: { id: v.id("recipes") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
+  },
+});
+
+export const updateAIRecipeStatus = mutation({
+  args: {
+    recipeId: v.id("recipes"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("done"),
+      v.literal("failed")
+    ),
+    error: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.recipeId, {
+      aiRecipeStatus: args.status,
+      aiRecipeError: args.error,
+    });
+  },
+});
+
+// Trigger AI extraction from frontend (schedules the action)
+export const triggerAIExtraction = mutation({
+  args: { recipeId: v.id("recipes") },
+  handler: async (ctx, args) => {
+    // Mark as pending and schedule extraction
+    await ctx.db.patch(args.recipeId, {
+      aiRecipeStatus: "pending",
+      aiRecipeError: undefined,
+    });
+    await ctx.scheduler.runAfter(0, api.ai.extractAIRecipe, {
+      recipeId: args.recipeId,
+    });
+  },
+});
+
+export const updateAIRecipe = mutation({
+  args: {
+    recipeId: v.id("recipes"),
+    aiRecipe: v.object({
+      title: v.optional(v.string()),
+      description: v.optional(v.string()),
+      prepTime: v.optional(v.string()),
+      cookTime: v.optional(v.string()),
+      servings: v.optional(v.string()),
+      ingredients: v.array(v.string()),
+      instructions: v.array(v.string()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.recipeId, {
+      aiRecipe: args.aiRecipe,
+      aiRecipeStatus: "done",
+      aiRecipeError: undefined,
+    });
   },
 });

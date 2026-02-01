@@ -1,23 +1,69 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+function CollapsibleSection({ 
+  title, 
+  children, 
+  defaultOpen = false 
+}: { 
+  title: string; 
+  children: React.ReactNode; 
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  
+  return (
+    <div className="border border-[var(--ink-light)] bg-white/30">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-white/20 transition-colors"
+      >
+        <h3 className="font-display text-lg font-medium" style={{ color: 'var(--ink)' }}>
+          {title}
+        </h3>
+        <span 
+          className="text-xl transition-transform duration-200"
+          style={{ 
+            color: 'var(--ink-light)',
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+          }}
+        >
+          ▼
+        </span>
+      </button>
+      {isOpen && (
+        <div className="px-4 pb-4 border-t border-[var(--ink-light)]">
+          <div className="pt-4">
+            {children}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RecipePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const recipe = useQuery(api.recipes.get, { id: id as Id<"recipes"> });
   const deleteRecipe = useMutation(api.recipes.remove);
+  const triggerExtraction = useMutation(api.recipes.triggerAIExtraction);
 
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this recipe?")) {
       await deleteRecipe({ id: id as Id<"recipes"> });
       router.push("/");
     }
+  };
+
+  const handleRetryExtraction = async () => {
+    await triggerExtraction({ recipeId: id as Id<"recipes"> });
   };
 
   if (recipe === undefined) {
@@ -40,6 +86,9 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
       </div>
     );
   }
+
+  const hasAIRecipe = recipe.aiRecipe && 
+    (recipe.aiRecipe.ingredients.length > 0 || recipe.aiRecipe.instructions.length > 0);
 
   return (
     <main>
@@ -87,36 +136,155 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
         </div>
       </section>
 
-      {/* Recipe Details */}
-      <section className="mb-12 space-y-6">
-        {/* Description - only shows if exists */}
-        {recipe.description && (
-          <div>
-            <h2 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--ink)' }}>
-              Description
-            </h2>
-            <div className="bg-white/50 border border-[var(--ink)] p-4 sm:p-6">
-              <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base" style={{ color: 'var(--ink)' }}>
-                {recipe.description}
-              </p>
-            </div>
+      {/* AI Recipe Section - Primary Content */}
+      <section className="mb-12">
+        {(recipe.aiRecipeStatus === "pending" || recipe.aiRecipeStatus === "processing") && (
+          <div className="border-2 border-dashed border-[var(--sage)] bg-[var(--sage)]/10 p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[var(--sage)] border-t-transparent mb-4" />
+            <p className="font-display text-lg" style={{ color: 'var(--ink)' }}>
+              Extracting recipe with AI...
+            </p>
+            <p className="text-sm mt-2" style={{ color: 'var(--ink-light)' }}>
+              Analyzing transcript, description, and comments
+            </p>
           </div>
         )}
-        
-        {/* Pinned Comment - only shows if exists */}
-        {recipe.ownerComment && (
-          <div>
-            <h2 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--ink)' }}>
-              Pinned Comment
-            </h2>
-            <div className="bg-white/50 border border-[var(--ink)] p-4 sm:p-6">
-              <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base" style={{ color: 'var(--ink)' }}>
-                {recipe.ownerComment}
+
+        {recipe.aiRecipeStatus === "failed" && (
+          <div className="border-2 border-dashed border-[var(--terracotta)] bg-[var(--terracotta)]/10 p-8 text-center">
+            <p className="font-display text-lg mb-2" style={{ color: 'var(--ink)' }}>
+              Couldn't extract recipe automatically
+            </p>
+            <p className="text-sm mb-4" style={{ color: 'var(--ink-light)' }}>
+              {recipe.aiRecipeError || "The video may not contain a clear recipe"}
+            </p>
+            <button
+              onClick={handleRetryExtraction}
+              className="px-4 py-2 font-display text-sm text-white transition-all hover:translate-y-[-2px]"
+              style={{ background: 'var(--terracotta)' }}
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {hasAIRecipe && recipe.aiRecipe && (
+          <div className="border-2 border-[var(--sage)] bg-white p-6 sm:p-8">
+            {/* Recipe Meta */}
+            {(recipe.aiRecipe.prepTime || recipe.aiRecipe.cookTime || recipe.aiRecipe.servings) && (
+              <div className="flex flex-wrap gap-4 mb-6 pb-6 border-b border-[var(--ink-light)]/30">
+                {recipe.aiRecipe.prepTime && (
+                  <div>
+                    <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--ink-light)' }}>Prep</span>
+                    <p className="font-display font-medium" style={{ color: 'var(--ink)' }}>{recipe.aiRecipe.prepTime}</p>
+                  </div>
+                )}
+                {recipe.aiRecipe.cookTime && (
+                  <div>
+                    <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--ink-light)' }}>Cook</span>
+                    <p className="font-display font-medium" style={{ color: 'var(--ink)' }}>{recipe.aiRecipe.cookTime}</p>
+                  </div>
+                )}
+                {recipe.aiRecipe.servings && (
+                  <div>
+                    <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--ink-light)' }}>Servings</span>
+                    <p className="font-display font-medium" style={{ color: 'var(--ink)' }}>{recipe.aiRecipe.servings}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {recipe.aiRecipe.description && (
+              <p className="mb-6 italic" style={{ color: 'var(--ink-light)' }}>
+                {recipe.aiRecipe.description}
               </p>
-            </div>
+            )}
+
+            {/* Ingredients */}
+            {recipe.aiRecipe.ingredients.length > 0 && (
+              <div className="mb-8">
+                <h2 className="font-display text-2xl font-bold mb-4" style={{ color: 'var(--ink)' }}>
+                  Ingredients
+                </h2>
+                <ul className="space-y-2">
+                  {recipe.aiRecipe.ingredients.map((ingredient, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--sage)' }} />
+                      <span style={{ color: 'var(--ink)' }}>{ingredient}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Instructions */}
+            {recipe.aiRecipe.instructions.length > 0 && (
+              <div>
+                <h2 className="font-display text-2xl font-bold mb-4" style={{ color: 'var(--ink)' }}>
+                  Instructions
+                </h2>
+                <ol className="space-y-4">
+                  {recipe.aiRecipe.instructions.map((step, i) => (
+                    <li key={i} className="flex gap-4">
+                      <span 
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-display font-bold text-white"
+                        style={{ background: 'var(--terracotta)' }}
+                      >
+                        {i + 1}
+                      </span>
+                      <p className="pt-1" style={{ color: 'var(--ink)' }}>{step}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            <p className="mt-8 pt-4 border-t border-[var(--ink-light)]/30 text-xs" style={{ color: 'var(--ink-light)' }}>
+              ✨ Recipe extracted by AI from video transcript and description
+            </p>
+          </div>
+        )}
+
+        {!recipe.aiRecipeStatus && !hasAIRecipe && (
+          <div className="border-2 border-dashed border-[var(--ink-light)] p-8 text-center">
+            <p className="font-display text-lg mb-4" style={{ color: 'var(--ink)' }}>
+              No AI recipe extracted yet
+            </p>
+            <button
+              onClick={handleRetryExtraction}
+              className="px-4 py-2 font-display text-sm text-white transition-all hover:translate-y-[-2px]"
+              style={{ background: 'var(--sage)' }}
+            >
+              Extract Recipe with AI
+            </button>
           </div>
         )}
       </section>
+
+      {/* Original Content - Collapsible */}
+      {(recipe.description || recipe.ownerComment) && (
+        <section className="mb-12 space-y-3">
+          <h2 className="font-display text-sm uppercase tracking-wide mb-4" style={{ color: 'var(--ink-light)' }}>
+            Original Video Content
+          </h2>
+          
+          {recipe.description && (
+            <CollapsibleSection title="Video Description" defaultOpen={false}>
+              <p className="whitespace-pre-wrap leading-relaxed text-sm" style={{ color: 'var(--ink)' }}>
+                {recipe.description}
+              </p>
+            </CollapsibleSection>
+          )}
+          
+          {recipe.ownerComment && (
+            <CollapsibleSection title="Pinned Comment" defaultOpen={false}>
+              <p className="whitespace-pre-wrap leading-relaxed text-sm" style={{ color: 'var(--ink)' }}>
+                {recipe.ownerComment}
+              </p>
+            </CollapsibleSection>
+          )}
+        </section>
+      )}
 
       {/* Original Link */}
       <section className="mb-12">
