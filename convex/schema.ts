@@ -12,6 +12,8 @@ export default defineSchema({
     channelName: v.optional(v.string()),
     channelId: v.optional(v.string()),
     duration: v.optional(v.string()),
+    // Video transcript for chat context
+    transcript: v.optional(v.string()),
     // AI-extracted recipe
     aiRecipe: v.optional(v.object({
       title: v.optional(v.string()),

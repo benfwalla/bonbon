@@ -118,11 +118,17 @@ export const chat = action({
     }
 
     // Build recipe context
-    const recipeContext = recipe.aiRecipe ? `
+    let recipeContext = recipe.aiRecipe ? `
 Recipe: ${recipe.aiRecipe.cleanTitle || recipe.aiRecipe.title || recipe.title}
 Ingredients: ${recipe.aiRecipe.ingredients.join(", ")}
 Instructions: ${recipe.aiRecipe.instructions.join(" | ")}
     `.trim() : `Recipe: ${recipe.title}`;
+
+    // Add transcript if available (truncate to ~4000 chars to save tokens)
+    if (recipe.transcript) {
+      const truncatedTranscript = recipe.transcript.slice(0, 4000);
+      recipeContext += `\n\nVideo Transcript:\n${truncatedTranscript}${recipe.transcript.length > 4000 ? '...' : ''}`;
+    }
 
     // Get existing chat history
     const history = recipe.chatHistory || [];
@@ -153,7 +159,7 @@ You: "Coconut cream or cashew cream. Both keep it rich and dairy-free."`;
       model: "gpt-4o-mini",
       messages,
       temperature: 0.7,
-      max_tokens: 150,
+      max_tokens: 250,
     });
 
     const reply = response.choices[0]?.message?.content || "Sorry, couldn't help with that.";
@@ -200,6 +206,7 @@ export const extractAIRecipe = action({
         await ctx.runMutation(api.recipes.updateAIRecipe, {
           recipeId: args.recipeId,
           aiRecipe,
+          transcript: transcript || undefined,
         });
       } else {
         await ctx.runMutation(api.recipes.updateAIRecipeStatus, {

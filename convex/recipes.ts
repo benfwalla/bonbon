@@ -249,10 +249,12 @@ export const updateAIRecipe = mutation({
       ingredients: v.array(v.string()),
       instructions: v.array(v.string()),
     }),
+    transcript: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.recipeId, {
       aiRecipe: args.aiRecipe,
+      transcript: args.transcript,
       aiRecipeStatus: "done",
       aiRecipeError: undefined,
     });
