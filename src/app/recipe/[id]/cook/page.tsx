@@ -281,7 +281,7 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendChat()}
                   placeholder="Ask about substitutes, tips..."
-                  className="flex-1 bg-white/10 rounded-full px-4 py-3 text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--terracotta)] text-white"
+                  className="flex-1 bg-white/10 rounded-full px-4 py-3 text-base placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--terracotta)] text-white"
                   autoComplete="off"
                 />
                 <button
