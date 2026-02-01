@@ -1,7 +1,9 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+// NOTE: This deployment is shared with fitclaw - include both schemas
 export default defineSchema({
+  // ========== BONBON TABLES ==========
   recipes: defineTable({
     url: v.string(),
     videoId: v.string(),
@@ -12,12 +14,10 @@ export default defineSchema({
     channelName: v.optional(v.string()),
     channelId: v.optional(v.string()),
     duration: v.optional(v.string()),
-    // Video transcript for chat context
     transcript: v.optional(v.string()),
-    // AI-extracted recipe
     aiRecipe: v.optional(v.object({
       title: v.optional(v.string()),
-      cleanTitle: v.optional(v.string()), // Generic, non-clickbait title
+      cleanTitle: v.optional(v.string()),
       description: v.optional(v.string()),
       prepTime: v.optional(v.string()),
       cookTime: v.optional(v.string()),
@@ -25,7 +25,6 @@ export default defineSchema({
       ingredients: v.array(v.string()),
       instructions: v.array(v.string()),
     })),
-    // Chat history for recipe
     chatHistory: v.optional(v.array(v.object({
       role: v.union(v.literal("user"), v.literal("assistant")),
       content: v.string(),
@@ -38,4 +37,70 @@ export default defineSchema({
     )),
     aiRecipeError: v.optional(v.string()),
   }).index("by_videoId", ["videoId"]),
+
+  // ========== FITCLAW TABLES ==========
+  
+  fitUser: defineTable({
+    name: v.optional(v.string()),
+    goals: v.optional(v.array(v.string())),
+    experienceLevel: v.optional(v.string()),
+    preferredDuration: v.optional(v.number()),
+    notes: v.optional(v.string()),
+  }),
+
+  fitEquipment: defineTable({
+    name: v.string(),
+    category: v.string(),
+    available: v.boolean(),
+    notes: v.optional(v.string()),
+  }).index("by_category", ["category"]),
+
+  fitExercises: defineTable({
+    name: v.string(),
+    muscleGroups: v.array(v.string()),
+    equipment: v.array(v.string()),
+    difficulty: v.string(),
+    instructions: v.optional(v.string()),
+    isCompound: v.boolean(),
+  }).index("by_muscle", ["muscleGroups"]),
+
+  fitWorkouts: defineTable({
+    date: v.string(),
+    name: v.optional(v.string()),
+    duration: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    exercises: v.array(v.object({
+      name: v.string(),
+      muscleGroups: v.array(v.string()),
+      sets: v.array(v.object({
+        reps: v.number(),
+        weight: v.optional(v.number()),
+        notes: v.optional(v.string()),
+      })),
+    })),
+  }).index("by_date", ["date"]),
+
+  fitChat: defineTable({
+    role: v.union(v.literal("user"), v.literal("assistant")),
+    content: v.string(),
+    timestamp: v.number(),
+    workoutId: v.optional(v.id("fitWorkouts")),
+  }).index("by_timestamp", ["timestamp"]),
+
+  fitCurrentWorkout: defineTable({
+    startedAt: v.number(),
+    exercises: v.array(v.object({
+      name: v.string(),
+      muscleGroups: v.array(v.string()),
+      targetSets: v.number(),
+      targetReps: v.string(),
+      suggestedWeight: v.optional(v.number()),
+      completedSets: v.array(v.object({
+        reps: v.number(),
+        weight: v.optional(v.number()),
+        notes: v.optional(v.string()),
+      })),
+    })),
+    notes: v.optional(v.string()),
+  }),
 });
