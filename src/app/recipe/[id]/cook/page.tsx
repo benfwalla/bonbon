@@ -67,7 +67,7 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
 
   if (recipe === undefined) {
     return (
-      <div className="h-dvh bg-[var(--ink)] flex items-center justify-center">
+      <div className="h-[100dvh] w-full bg-[var(--ink)] flex items-center justify-center">
         <CookingPot size={48} className="animate-pulse" style={{ color: 'var(--terracotta)' }} />
       </div>
     );
@@ -112,7 +112,7 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
   };
 
   return (
-    <div className="h-dvh bg-[var(--ink)] text-white flex flex-col overflow-hidden">
+    <div className="h-[100dvh] w-full bg-[var(--ink)] text-white flex flex-col overflow-hidden">
       {/* Header - fixed */}
       <header className="flex-none flex items-center justify-between p-4 border-b border-white/10">
         <button
