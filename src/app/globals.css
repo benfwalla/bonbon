@@ -105,3 +105,12 @@ body {
 .link-underline:hover::after {
   width: 100%;
 }
+
+/* Safe areas for notch/home indicator */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

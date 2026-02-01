@@ -113,106 +113,110 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
 
   return (
     <div className="h-[100dvh] w-full bg-[var(--ink)] text-white flex flex-col overflow-hidden">
-      {/* Header - fixed */}
-      <header className="flex-none flex items-center justify-between p-4 border-b border-white/10">
+      {/* Header */}
+      <header className="flex-none flex items-center justify-between px-4 py-3 safe-top">
         <button
           onClick={() => router.push(`/recipe/${id}`)}
           className="p-2 -m-2 hover:bg-white/10 rounded-full transition-colors"
         >
           <X size={24} />
         </button>
-        <h1 className="font-display font-semibold text-base sm:text-lg truncate px-2 text-center flex-1">
+        <h1 className="font-display font-semibold text-base truncate px-4 text-center flex-1">
           {aiRecipe.cleanTitle || aiRecipe.title || recipe.title}
         </h1>
-        <button
-          onClick={() => setShowIngredients(!showIngredients)}
-          className={`p-2 -m-2 rounded-full transition-colors ${showIngredients ? 'bg-[var(--sage)] text-[var(--ink)]' : 'hover:bg-white/10'}`}
-        >
-          <ListChecks size={24} />
-        </button>
+        <div className="w-10" /> {/* Spacer for balance */}
       </header>
 
-      {/* Main content - fills remaining space */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Ingredients drawer */}
-        <Drawer.Root open={showIngredients} onOpenChange={setShowIngredients}>
-          <Drawer.Portal>
-            <Drawer.Overlay className="fixed inset-0 bg-black/60 z-40" />
-            <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-[var(--ink)] border-t border-white/10 rounded-t-2xl max-h-[70dvh] flex flex-col">
-              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/20 mt-3 mb-2" />
-              <Drawer.Title className="font-display font-semibold px-4 pb-3 text-white border-b border-white/10">
-                Ingredients
-              </Drawer.Title>
-              <div className="flex-1 overflow-y-auto p-4">
-                <ul className="space-y-3">
-                  {aiRecipe.ingredients.map((ing, i) => (
-                    <li key={i}>
-                      <button
-                        onClick={() => toggleIngredient(i)}
-                        className={`text-left w-full flex items-start gap-3 ${checkedIngredients.has(i) ? 'text-white/40 line-through' : 'text-white'}`}
-                      >
-                        <span className={`mt-0.5 w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center ${checkedIngredients.has(i) ? 'bg-[var(--sage)] border-[var(--sage)]' : 'border-white/40'}`}>
-                          {checkedIngredients.has(i) && <span className="text-[var(--ink)] text-xs font-bold">✓</span>}
-                        </span>
-                        <span>{ing}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Drawer.Content>
-          </Drawer.Portal>
-        </Drawer.Root>
+      {/* Main content with side navigation */}
+      <div className="flex-1 flex items-center justify-center relative min-h-0 px-4">
+        {/* Left arrow */}
+        <button
+          onClick={handlePrev}
+          disabled={currentStep === 0}
+          className="absolute left-2 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white/20 transition-colors z-10"
+        >
+          <CaretLeft size={24} weight="bold" />
+        </button>
 
-        {/* Current step - centered */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center min-h-0">
+        {/* Step content */}
+        <div className="flex flex-col items-center justify-center text-center px-12 max-w-lg">
           <div className="text-sm uppercase tracking-wide text-white/40 mb-4">
             Step {currentStep + 1} of {totalSteps}
           </div>
-          <p className="text-xl sm:text-2xl md:text-3xl leading-relaxed max-w-lg">
+          <p className="text-xl sm:text-2xl leading-relaxed">
             {instructions[currentStep]}
           </p>
         </div>
 
-        {/* Step navigation - fixed at bottom */}
-        <div className="flex-none flex items-center justify-between p-4 border-t border-white/10 gap-2">
-          <button
-            onClick={handlePrev}
-            disabled={currentStep === 0}
-            className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-3 bg-white/10 rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
-          >
-            <CaretLeft size={20} />
-            <span className="font-display hidden sm:inline">Back</span>
-          </button>
-          
-          <div className="flex gap-1.5 flex-wrap justify-center max-w-[40%]">
-            {instructions.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentStep(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${i === currentStep ? 'bg-[var(--terracotta)]' : 'bg-white/20'}`}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={handleNext}
-            disabled={currentStep === totalSteps - 1}
-            className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-3 bg-[var(--terracotta)] rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 transition-all"
-          >
-            <span className="font-display hidden sm:inline">Next</span>
-            <CaretRight size={20} />
-          </button>
-        </div>
+        {/* Right arrow */}
+        <button
+          onClick={handleNext}
+          disabled={currentStep === totalSteps - 1}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white/20 transition-colors z-10"
+        >
+          <CaretRight size={24} weight="bold" />
+        </button>
       </div>
 
-      {/* Chat FAB */}
-      <button
-        onClick={() => setShowChat(true)}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-[var(--terracotta)] rounded-full flex items-center justify-center shadow-lg hover:brightness-110 transition-all z-30"
-      >
-        <ChatCircle size={28} weight="fill" />
-      </button>
+      {/* Bottom toolbar */}
+      <div className="flex-none flex items-center justify-between px-6 py-4 safe-bottom">
+        {/* Ingredients button */}
+        <button
+          onClick={() => setShowIngredients(true)}
+          className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+        >
+          <ListChecks size={24} />
+        </button>
+
+        {/* Step dots */}
+        <div className="flex gap-1.5 justify-center">
+          {instructions.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentStep(i)}
+              className={`w-2 h-2 rounded-full transition-colors ${i === currentStep ? 'bg-[var(--terracotta)]' : 'bg-white/30'}`}
+            />
+          ))}
+        </div>
+
+        {/* Chat button */}
+        <button
+          onClick={() => setShowChat(true)}
+          className="p-3 rounded-full bg-[var(--terracotta)] hover:brightness-110 transition-all"
+        >
+          <ChatCircle size={24} weight="fill" />
+        </button>
+      </div>
+
+      {/* Ingredients drawer */}
+      <Drawer.Root open={showIngredients} onOpenChange={setShowIngredients}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 bg-black/60 z-40" />
+          <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-[var(--ink)] border-t border-white/10 rounded-t-2xl max-h-[70dvh] flex flex-col">
+            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/20 mt-3 mb-2" />
+            <Drawer.Title className="font-display font-semibold px-4 pb-3 text-white border-b border-white/10">
+              Ingredients
+            </Drawer.Title>
+            <div className="flex-1 overflow-y-auto p-4">
+              <ul className="space-y-3">
+                {aiRecipe.ingredients.map((ing, i) => (
+                  <li key={i}>
+                    <button
+                      onClick={() => toggleIngredient(i)}
+                      className={`text-left w-full flex items-start gap-3 ${checkedIngredients.has(i) ? 'text-white/40 line-through' : 'text-white'}`}
+                    >
+                      <span className={`mt-0.5 w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center ${checkedIngredients.has(i) ? 'bg-[var(--sage)] border-[var(--sage)]' : 'border-white/40'}`}>
+                        {checkedIngredients.has(i) && <span className="text-[var(--ink)] text-xs font-bold">✓</span>}
+                      </span>
+                      <span>{ing}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
 
       {/* Chat drawer */}
       <Drawer.Root open={showChat} onOpenChange={setShowChat}>
@@ -259,7 +263,7 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
             </div>
 
             {/* Chat input */}
-            <div className="flex-none p-3 border-t border-white/10">
+            <div className="flex-none p-3 border-t border-white/10 safe-bottom">
               <div className="flex gap-2">
                 <input
                   type="text"
