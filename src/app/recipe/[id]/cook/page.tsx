@@ -273,7 +273,7 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
             </div>
 
             {/* Chat input */}
-            <div className="flex-none p-3 border-t border-white/10 safe-bottom">
+            <div className="flex-none p-3 pb-8 mb-[env(safe-area-inset-bottom)] border-t border-white/10">
               <div className="flex gap-2">
                 <input
                   type="text"
