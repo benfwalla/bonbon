@@ -15,6 +15,7 @@ export default defineSchema({
     // AI-extracted recipe
     aiRecipe: v.optional(v.object({
       title: v.optional(v.string()),
+      cleanTitle: v.optional(v.string()), // Generic, non-clickbait title
       description: v.optional(v.string()),
       prepTime: v.optional(v.string()),
       cookTime: v.optional(v.string()),
@@ -22,6 +23,11 @@ export default defineSchema({
       ingredients: v.array(v.string()),
       instructions: v.array(v.string()),
     })),
+    // Chat history for recipe
+    chatHistory: v.optional(v.array(v.object({
+      role: v.union(v.literal("user"), v.literal("assistant")),
+      content: v.string(),
+    }))),
     aiRecipeStatus: v.optional(v.union(
       v.literal("pending"),
       v.literal("processing"),

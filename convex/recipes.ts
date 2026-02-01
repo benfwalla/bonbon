@@ -241,6 +241,7 @@ export const updateAIRecipe = mutation({
     recipeId: v.id("recipes"),
     aiRecipe: v.object({
       title: v.optional(v.string()),
+      cleanTitle: v.optional(v.string()),
       description: v.optional(v.string()),
       prepTime: v.optional(v.string()),
       cookTime: v.optional(v.string()),
@@ -255,5 +256,32 @@ export const updateAIRecipe = mutation({
       aiRecipeStatus: "done",
       aiRecipeError: undefined,
     });
+  },
+});
+
+export const addChatMessage = mutation({
+  args: {
+    recipeId: v.id("recipes"),
+    userMessage: v.string(),
+    assistantMessage: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const recipe = await ctx.db.get(args.recipeId);
+    if (!recipe) throw new Error("Recipe not found");
+
+    const history = recipe.chatHistory || [];
+    history.push(
+      { role: "user", content: args.userMessage },
+      { role: "assistant", content: args.assistantMessage }
+    );
+
+    await ctx.db.patch(args.recipeId, { chatHistory: history });
+  },
+});
+
+export const clearChat = mutation({
+  args: { recipeId: v.id("recipes") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.recipeId, { chatHistory: [] });
   },
 });

@@ -6,6 +6,7 @@ import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CookingPot, ChatCircle } from "@phosphor-icons/react";
 
 function CollapsibleSection({ 
   title, 
@@ -89,6 +90,9 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
 
   const hasAIRecipe = recipe.aiRecipe && 
     (recipe.aiRecipe.ingredients.length > 0 || recipe.aiRecipe.instructions.length > 0);
+  
+  // Use clean title if available, fallback to original
+  const displayTitle = recipe.aiRecipe?.cleanTitle || recipe.aiRecipe?.title || recipe.title || "Untitled Recipe";
 
   return (
     <main>
@@ -102,9 +106,9 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
       </Link>
 
       {/* Recipe Header */}
-      <header className="mb-10">
+      <header className="mb-6">
         <h1 className="font-display text-3xl md:text-5xl font-bold leading-tight mb-4" style={{ color: 'var(--ink)' }}>
-          {recipe.title || "Untitled Recipe"}
+          {displayTitle}
         </h1>
         {recipe.channelName && (
           <p className="text-xl italic" style={{ color: 'var(--ink-light)' }}>
@@ -121,6 +125,28 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
           </p>
         )}
       </header>
+
+      {/* Cook & Chat Buttons */}
+      {hasAIRecipe && (
+        <section className="mb-10 flex gap-3">
+          <Link
+            href={`/recipe/${id}/cook`}
+            className="flex items-center gap-2 px-5 py-3 font-display font-semibold text-white transition-all hover:translate-y-[-2px] rounded-lg"
+            style={{ background: 'var(--terracotta)' }}
+          >
+            <CookingPot size={22} weight="bold" />
+            Cook
+          </Link>
+          <Link
+            href={`/recipe/${id}/cook`}
+            className="flex items-center gap-2 px-5 py-3 font-display font-semibold transition-all hover:translate-y-[-2px] rounded-lg border-2"
+            style={{ borderColor: 'var(--ink)', color: 'var(--ink)' }}
+          >
+            <ChatCircle size={22} weight="bold" />
+            Chat
+          </Link>
+        </section>
+      )}
 
       {/* Video Embed */}
       <section className="mb-12">
