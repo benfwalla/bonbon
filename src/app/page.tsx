@@ -121,7 +121,7 @@ export default function Home() {
                 </div>
               )}
               <h3 className="font-display text-base sm:text-lg font-semibold leading-snug mb-1 line-clamp-2" style={{ color: 'var(--ink)' }}>
-                {recipe.title || "Untitled Recipe"}
+                {recipe.aiRecipe?.title || recipe.title || "Untitled Recipe"}
               </h3>
               {recipe.channelName && (
                 <p className="text-xs sm:text-sm" style={{ color: 'var(--ink-light)' }}>
