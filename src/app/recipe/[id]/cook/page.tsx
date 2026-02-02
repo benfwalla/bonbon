@@ -22,7 +22,7 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
   const router = useRouter();
   const searchParams = useSearchParams();
   const recipe = useQuery(api.recipes.get, { id: id as Id<"recipes"> });
-  const sendMessage = useAction(api.ai.chat);
+  const sendMessage = useAction(api.recipeAi.chat);
   
   const [currentStep, setCurrentStep] = useState(0);
   const [showIngredients, setShowIngredients] = useState(false);
