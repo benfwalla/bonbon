@@ -253,10 +253,10 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
                   {recipe.aiRecipe.instructions.map((step, i) => (
                     <li key={i} className="flex items-start gap-4">
                       <span 
-                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-display font-bold text-white"
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-display font-bold text-white leading-none"
                         style={{ background: 'var(--terracotta)' }}
                       >
-                        {i + 1}
+                        <span className="-mt-0.5">{i + 1}</span>
                       </span>
                       <p className="pt-1.5" style={{ color: 'var(--ink)' }}>{step}</p>
                     </li>
