@@ -12,9 +12,14 @@ export default defineSchema({
     ownerComment: v.optional(v.string()),
     thumbnail: v.optional(v.string()),
     channelName: v.optional(v.string()),
+    channelUrl: v.optional(v.string()),
     channelId: v.optional(v.string()),
     duration: v.optional(v.string()),
+    isShort: v.optional(v.boolean()),
     transcript: v.optional(v.string()),
+    // What the AI extraction actually had available: "transcript",
+    // "description", "pinned comment", or "title only"
+    extractionSources: v.optional(v.array(v.string())),
     aiRecipe: v.optional(v.object({
       title: v.optional(v.string()),
       cleanTitle: v.optional(v.string()),

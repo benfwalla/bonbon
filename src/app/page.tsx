@@ -5,8 +5,10 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const recipes = useQuery(api.recipes.list);
   const addRecipe = useMutation(api.recipes.add);
   const [url, setUrl] = useState("");
@@ -25,10 +27,14 @@ export default function Home() {
 
     setIsAdding(true);
     try {
-      await addRecipe({ url });
+      const result = await addRecipe({ url });
       setUrl("");
-    } catch (err) {
-      setError("Failed to save recipe. It might already exist.");
+      if (result.alreadyExisted) {
+        // Already saved — just take them to it
+        router.push(`/recipe/${result.id}`);
+      }
+    } catch {
+      setError("Couldn't save that link — make sure it's a YouTube video URL.");
     } finally {
       setIsAdding(false);
     }
@@ -126,6 +132,16 @@ export default function Home() {
               {recipe.channelName && (
                 <p className="text-xs sm:text-sm" style={{ color: 'var(--ink-light)' }}>
                   {recipe.channelName}
+                </p>
+              )}
+              {(recipe.aiRecipeStatus === "pending" || recipe.aiRecipeStatus === "processing") && (
+                <p className="text-xs italic mt-1" style={{ color: 'var(--sage)' }}>
+                  extracting recipe…
+                </p>
+              )}
+              {recipe.aiRecipeStatus === "failed" && (
+                <p className="text-xs italic mt-1" style={{ color: 'var(--terracotta)' }}>
+                  extraction failed — tap to retry
                 </p>
               )}
             </Link>

@@ -28,6 +28,7 @@ async function fetchVideoMetadata(url: string) {
     return {
       title: data.title,
       channelName: data.author_name,
+      channelUrl: data.author_url,
       thumbnail: data.thumbnail_url,
     };
   } catch {
@@ -86,7 +87,21 @@ async function fetchOwnerComment(videoId: string, channelId: string): Promise<st
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("recipes").order("desc").collect();
+    const recipes = await ctx.db.query("recipes").order("desc").collect();
+    // Only ship what the homepage renders — transcripts, chat history, and
+    // descriptions can be tens of KB per recipe
+    return recipes.map((r) => ({
+      _id: r._id,
+      _creationTime: r._creationTime,
+      title: r.title,
+      thumbnail: r.thumbnail,
+      channelName: r.channelName,
+      isShort: r.isShort,
+      aiRecipeStatus: r.aiRecipeStatus,
+      aiRecipe: r.aiRecipe
+        ? { title: r.aiRecipe.title, cleanTitle: r.aiRecipe.cleanTitle }
+        : undefined,
+    }));
   },
 });
 
@@ -105,15 +120,17 @@ export const add = mutation({
       throw new Error("Invalid YouTube URL");
     }
 
-    // Check if already exists
+    // Check if already exists — return it so the UI can navigate there
     const existing = await ctx.db
       .query("recipes")
       .withIndex("by_videoId", (q) => q.eq("videoId", videoId))
       .first();
-    
+
     if (existing) {
-      throw new Error("Recipe already saved");
+      return { id: existing._id, alreadyExisted: true };
     }
+
+    const isShort = /youtube\.com\/shorts\//.test(args.url);
 
     // Normalize URL
     const normalizedUrl = `https://www.youtube.com/watch?v=${videoId}`;
@@ -126,6 +143,7 @@ export const add = mutation({
       url: normalizedUrl,
       videoId,
       thumbnail,
+      isShort,
     });
 
     // Schedule action to fetch full metadata
@@ -135,7 +153,7 @@ export const add = mutation({
       videoId,
     });
 
-    return recipeId;
+    return { id: recipeId, alreadyExisted: false };
   },
 });
 
@@ -163,6 +181,7 @@ export const fetchMetadata = action({
         recipeId: args.recipeId,
         title: metadata?.title,
         channelName: metadata?.channelName,
+        channelUrl: metadata?.channelUrl,
         thumbnail: metadata?.thumbnail,
         description,
         ownerComment,
@@ -181,6 +200,7 @@ export const updateMetadata = mutation({
     recipeId: v.id("recipes"),
     title: v.optional(v.string()),
     channelName: v.optional(v.string()),
+    channelUrl: v.optional(v.string()),
     thumbnail: v.optional(v.string()),
     description: v.optional(v.string()),
     ownerComment: v.optional(v.string()),
@@ -250,14 +270,21 @@ export const updateAIRecipe = mutation({
       instructions: v.array(v.string()),
     }),
     transcript: v.optional(v.string()),
+    extractionSources: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.recipeId, {
+    // Keep a previously stored transcript if this run couldn't fetch one —
+    // patching with undefined would delete the field
+    const patch: Record<string, unknown> = {
       aiRecipe: args.aiRecipe,
-      transcript: args.transcript,
+      extractionSources: args.extractionSources,
       aiRecipeStatus: "done",
       aiRecipeError: undefined,
-    });
+    };
+    if (args.transcript !== undefined) {
+      patch.transcript = args.transcript;
+    }
+    await ctx.db.patch(args.recipeId, patch);
   },
 });
 

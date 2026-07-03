@@ -6,13 +6,90 @@ import { api, internal } from "./_generated/api";
 import OpenAI from "openai";
 import { YoutubeTranscript } from "youtube-transcript";
 
-// Fetch YouTube transcript
+// Decode HTML entities that YouTube caption endpoints leave in the text
+// (often double-encoded, e.g. "&amp;#39;")
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, " ");
+}
+
+// Fetch captions via YouTube's InnerTube API using the ANDROID client.
+// The watch-page scraping that youtube-transcript does gets bot-blocked from
+// datacenter IPs (where Convex actions run); the InnerTube player endpoint
+// with a mobile client context is what yt-dlp/youtubei.js use and works from servers.
+async function fetchTranscriptInnertube(videoId: string): Promise<string | null> {
+  const res = await fetch(
+    "https://www.youtube.com/youtubei/v1/player?prettyPrint=false",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip",
+      },
+      body: JSON.stringify({
+        context: {
+          client: {
+            clientName: "ANDROID",
+            clientVersion: "20.10.38",
+            androidSdkVersion: 30,
+            hl: "en",
+          },
+        },
+        videoId,
+      }),
+    }
+  );
+  if (!res.ok) return null;
+  const data = await res.json();
+
+  const tracks: Array<{ baseUrl: string; languageCode?: string; kind?: string }> | undefined =
+    data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+  if (!tracks?.length) return null;
+
+  // Prefer manually-created English captions, then auto-generated English, then anything
+  const track =
+    tracks.find((t) => t.languageCode?.startsWith("en") && t.kind !== "asr") ??
+    tracks.find((t) => t.languageCode?.startsWith("en")) ??
+    tracks[0];
+
+  const capRes = await fetch(`${track.baseUrl}&fmt=json3`);
+  if (!capRes.ok) return null;
+  const cap = await capRes.json();
+
+  const text = (cap.events ?? [])
+    .flatMap((e: { segs?: Array<{ utf8?: string }> }) => e.segs ?? [])
+    .map((s: { utf8?: string }) => s.utf8 ?? "")
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return text.length > 0 ? text : null;
+}
+
+// Fetch YouTube transcript: InnerTube first, legacy library as fallback
 async function fetchTranscript(videoId: string): Promise<string | null> {
   try {
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-    return transcript.map(t => t.text).join(" ");
+    const text = await fetchTranscriptInnertube(videoId);
+    if (text) return text;
+    console.error("InnerTube returned no caption tracks for", videoId);
   } catch (error) {
-    console.error("Failed to fetch transcript:", error);
+    console.error("InnerTube transcript fetch failed:", error);
+  }
+
+  try {
+    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    const text = decodeEntities(transcript.map((t) => t.text).join(" "))
+      .replace(/\s+/g, " ")
+      .trim();
+    return text.length > 0 ? text : null;
+  } catch (error) {
+    console.error("Library transcript fetch failed:", error);
     return null;
   }
 }
@@ -76,13 +153,15 @@ Only return valid JSON, no markdown code blocks.`;
       ],
       temperature: 0.3,
       max_tokens: 2000,
+      response_format: { type: "json_object" },
     });
 
     const content = response.choices[0]?.message?.content;
     if (!content) return null;
 
-    // Parse JSON response
-    const parsed = JSON.parse(content);
+    // Parse JSON response (strip markdown fences if the model added them anyway)
+    const cleaned = content.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+    const parsed = JSON.parse(cleaned);
     return {
       title: parsed.title,
       cleanTitle: parsed.cleanTitle,
@@ -101,9 +180,11 @@ Only return valid JSON, no markdown code blocks.`;
 
 // Recipe chat - fast, terse responses
 export const chat = action({
-  args: { 
+  args: {
     recipeId: v.id("recipes"),
     message: v.string(),
+    // 1-based step the cook is currently on, when chatting from cook mode
+    currentStep: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -128,6 +209,16 @@ Instructions: ${recipe.aiRecipe.instructions.join(" | ")}
     if (recipe.transcript) {
       const truncatedTranscript = recipe.transcript.slice(0, 4000);
       recipeContext += `\n\nVideo Transcript:\n${truncatedTranscript}${recipe.transcript.length > 4000 ? '...' : ''}`;
+    }
+
+    // Tell the assistant where the cook currently is in the recipe
+    const instructions = recipe.aiRecipe?.instructions ?? [];
+    if (
+      args.currentStep !== undefined &&
+      args.currentStep >= 1 &&
+      args.currentStep <= instructions.length
+    ) {
+      recipeContext += `\n\nThe cook is currently on step ${args.currentStep} of ${instructions.length}: "${instructions[args.currentStep - 1]}"`;
     }
 
     // Get existing chat history
@@ -159,7 +250,9 @@ You: "Coconut cream or cashew cream. Both keep it rich and dairy-free."`;
       model: "gpt-4o-mini",
       messages,
       temperature: 0.7,
-      max_tokens: 250,
+      // Roomy enough that answers don't get cut off mid-sentence;
+      // the system prompt keeps replies short anyway
+      max_tokens: 500,
     });
 
     const reply = response.choices[0]?.message?.content || "Sorry, couldn't help with that.";
@@ -194,6 +287,15 @@ export const extractAIRecipe = action({
       // Fetch transcript
       const transcript = await fetchTranscript(recipe.videoId);
 
+      // Record what the AI actually saw, so the UI can show it
+      const extractionSources: string[] = [];
+      if (transcript) extractionSources.push("transcript");
+      if (recipe.description) extractionSources.push("description");
+      if (recipe.ownerComment) extractionSources.push("pinned comment");
+      if (!transcript && !recipe.description && !recipe.ownerComment && recipe.title) {
+        extractionSources.push("title only");
+      }
+
       // Extract recipe with AI
       const aiRecipe = await extractRecipeWithAI(
         transcript,
@@ -207,6 +309,7 @@ export const extractAIRecipe = action({
           recipeId: args.recipeId,
           aiRecipe,
           transcript: transcript || undefined,
+          extractionSources,
         });
       } else {
         await ctx.runMutation(api.recipes.updateAIRecipeStatus, {

@@ -113,15 +113,19 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
         {recipe.channelName && (
           <p className="text-xl italic" style={{ color: 'var(--ink-light)' }}>
             by{" "}
-            <a 
-              href={`https://youtube.com/@${recipe.channelName.replace(/\s+/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-underline"
-              style={{ color: 'var(--terracotta)' }}
-            >
-              {recipe.channelName}
-            </a>
+            {recipe.channelUrl ? (
+              <a
+                href={recipe.channelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-underline"
+                style={{ color: 'var(--terracotta)' }}
+              >
+                {recipe.channelName}
+              </a>
+            ) : (
+              <span style={{ color: 'var(--terracotta)' }}>{recipe.channelName}</span>
+            )}
           </p>
         )}
       </header>
@@ -148,18 +152,32 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
         </section>
       )}
 
-      {/* Video Embed */}
+      {/* Video Embed — Shorts are vertical, so use a 9:16 frame for them */}
       <section className="mb-12">
-        <div className="border-recipe bg-black">
-          <div className="video-container">
-            <iframe
-              src={`https://www.youtube.com/embed/${recipe.videoId}`}
-              title={recipe.title || "Recipe video"}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+        {recipe.isShort ? (
+          <div className="border-recipe bg-black max-w-[300px] mx-auto">
+            <div className="relative aspect-[9/16]">
+              <iframe
+                src={`https://www.youtube.com/embed/${recipe.videoId}`}
+                title={recipe.title || "Recipe video"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="border-recipe bg-black">
+            <div className="video-container">
+              <iframe
+                src={`https://www.youtube.com/embed/${recipe.videoId}`}
+                title={recipe.title || "Recipe video"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
       </section>
 
       {/* AI Recipe Section - Primary Content */}
@@ -265,6 +283,25 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
               </div>
             )}
 
+            {/* What the AI actually worked from, so it's obvious when the
+                transcript couldn't be fetched */}
+            <div className="mt-8 pt-4 border-t border-[var(--ink-light)]/30 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs" style={{ color: 'var(--ink-light)' }}>
+                {recipe.extractionSources?.length
+                  ? `Extracted from: ${recipe.extractionSources.join(" · ")}`
+                  : "Extracted before source tracking was added"}
+                {recipe.extractionSources?.length && !recipe.extractionSources.includes("transcript") ? (
+                  <span style={{ color: 'var(--terracotta)' }}> — no transcript was available</span>
+                ) : null}
+              </p>
+              <button
+                onClick={handleRetryExtraction}
+                className="text-xs underline decoration-1 underline-offset-2 hover:no-underline"
+                style={{ color: 'var(--ink-light)' }}
+              >
+                Re-extract
+              </button>
+            </div>
           </div>
         )}
 

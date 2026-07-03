@@ -31,10 +31,22 @@ This deployment is **shared with fitclaw** — both apps use the same Convex bac
 
 **Do not modify fitclaw tables when working on bonbon.**
 
+## Transcript Fetching
+
+`convex/recipeAi.ts` fetches captions via YouTube's InnerTube API (ANDROID
+client) first, falling back to the `youtube-transcript` npm package. The
+package alone is unreliable from datacenter IPs (it scrapes the watch page
+and gets bot-blocked), which is why InnerTube is primary. Each recipe stores
+`extractionSources` so the UI shows whether the transcript was actually used.
+
 ## Post-Deploy Checklist
 
 After pushing changes:
 1. Wait ~60s for Vercel build
 2. Check deployment status: `npx vercel ls bonbon --token="$VERCEL_TOKEN"`
 3. If build fails → check logs, fix, push, retry (up to 3x)
-4. If stuck → notify in Discord #bonbon channel
+4. **If `convex/` changed:** Vercel only builds the frontend — the Convex
+   functions/schema must also be deployed with `npx convex deploy` (or
+   `bunx convex deploy`) or the frontend will call functions that don't
+   exist yet
+5. If stuck → notify in Discord #bonbon channel
