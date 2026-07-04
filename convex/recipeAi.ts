@@ -141,6 +141,11 @@ Return a JSON object with these fields:
 - ingredients: Array of ingredient strings with quantities (e.g., "2 cups flour", "1 tsp salt")
 - instructions: Array of step-by-step instruction strings
 
+UNITS: Always use US customary kitchen units — cups, tablespoons, teaspoons, ounces, pounds, and °F.
+If the source uses metric (grams, milliliters, °C), convert to sensible rounded kitchen amounts
+(e.g. 250 ml → 1 cup, 500 g flour → about 4 cups, 200°C → 400°F). Apply this to both ingredients
+and any temperatures/amounts mentioned in the instructions.
+
 Be thorough - extract ALL ingredients and steps mentioned. If times/servings aren't mentioned, omit them.
 Only return valid JSON, no markdown code blocks.`;
 
@@ -235,6 +240,7 @@ Rules:
 - No filler words, no "Great question!", just answer directly.
 - If suggesting substitutes, just list them with a tiny note why.
 - Be practical and helpful.
+- Use US units (cups, tablespoons, teaspoons, ounces, pounds, °F). Convert any metric amounts.
 
 Example:
 User: "What can I sub for heavy cream?"

@@ -6,40 +6,40 @@ import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CookingPot, ChatCircle } from "@phosphor-icons/react";
+import { CookingPot, ChatCircle, ArrowsClockwise, CaretDown } from "@phosphor-icons/react";
 
-function CollapsibleSection({ 
-  title, 
-  children, 
-  defaultOpen = false 
-}: { 
-  title: string; 
-  children: React.ReactNode; 
+function CollapsibleSection({
+  title,
+  children,
+  defaultOpen = false
+}: {
+  title: string;
+  children: React.ReactNode;
   defaultOpen?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  
+
   return (
-    <div className="border border-[var(--ink-light)] bg-white/30">
+    <div className="candy-card overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-white/20 transition-colors"
+        className="w-full px-5 py-4 flex items-center justify-between text-left"
       >
-        <h3 className="font-display text-lg font-medium" style={{ color: 'var(--ink)' }}>
+        <h3 className="font-display text-lg font-bold" style={{ color: 'var(--ink)' }}>
           {title}
         </h3>
-        <span 
-          className="text-xs transition-transform duration-200"
-          style={{ 
-            color: 'var(--ink-light)',
+        <CaretDown
+          size={18}
+          weight="bold"
+          className="transition-transform duration-200"
+          style={{
+            color: 'var(--muted)',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
           }}
-        >
-          ▼
-        </span>
+        />
       </button>
       {isOpen && (
-        <div className="px-4 pb-4 border-t border-[var(--ink-light)]">
+        <div className="px-5 pb-5 border-t-2" style={{ borderColor: 'var(--ink)' }}>
           <div className="pt-4">
             {children}
           </div>
@@ -69,7 +69,7 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
 
   if (recipe === undefined) {
     return (
-      <div className="text-center py-20 font-display text-xl italic" style={{ color: 'var(--ink-light)' }}>
+      <div className="text-center py-20 font-display text-xl font-bold" style={{ color: 'var(--muted)' }}>
         Loading recipe...
       </div>
     );
@@ -78,40 +78,41 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
   if (recipe === null) {
     return (
       <div className="text-center py-20">
-        <p className="font-display text-2xl mb-4" style={{ color: 'var(--ink)' }}>
+        <p className="font-display text-2xl font-bold mb-4" style={{ color: 'var(--ink)' }}>
           Recipe not found
         </p>
-        <Link href="/" className="link-underline" style={{ color: 'var(--terracotta)' }}>
-          ← Back to collection
+        <Link href="/" className="link-underline font-semibold" style={{ color: 'var(--berry)' }}>
+          ← Back to the box
         </Link>
       </div>
     );
   }
 
-  const hasAIRecipe = recipe.aiRecipe && 
+  const hasAIRecipe = recipe.aiRecipe &&
     (recipe.aiRecipe.ingredients.length > 0 || recipe.aiRecipe.instructions.length > 0);
-  
+  const isExtracting = recipe.aiRecipeStatus === "pending" || recipe.aiRecipeStatus === "processing";
+
   // Use clean title if available, fallback to original
   const displayTitle = recipe.aiRecipe?.cleanTitle || recipe.aiRecipe?.title || recipe.title || "Untitled Recipe";
 
   return (
     <main>
       {/* Back Link */}
-      <Link 
-        href="/" 
-        className="inline-flex items-center gap-2 mb-8 font-display text-lg link-underline"
-        style={{ color: 'var(--ink-light)' }}
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 mb-8 font-bold text-sm link-underline"
+        style={{ color: 'var(--muted)' }}
       >
-        ← Back to collection
+        ← Back to the box
       </Link>
 
       {/* Recipe Header */}
       <header className="mb-6">
-        <h1 className="font-display text-3xl md:text-5xl font-bold leading-tight mb-4" style={{ color: 'var(--ink)' }}>
+        <h1 className="font-display text-4xl md:text-5xl font-black leading-tight mb-3" style={{ color: 'var(--ink)' }}>
           {displayTitle}
         </h1>
         {recipe.channelName && (
-          <p className="text-xl italic" style={{ color: 'var(--ink-light)' }}>
+          <p className="font-semibold" style={{ color: 'var(--muted)' }}>
             by{" "}
             {recipe.channelUrl ? (
               <a
@@ -119,43 +120,53 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
                 target="_blank"
                 rel="noopener noreferrer"
                 className="link-underline"
-                style={{ color: 'var(--terracotta)' }}
+                style={{ color: 'var(--berry)' }}
               >
                 {recipe.channelName}
               </a>
             ) : (
-              <span style={{ color: 'var(--terracotta)' }}>{recipe.channelName}</span>
+              <span style={{ color: 'var(--berry)' }}>{recipe.channelName}</span>
             )}
           </p>
         )}
       </header>
 
-      {/* Cook & Chat Buttons */}
+      {/* Action buttons */}
       {hasAIRecipe && (
-        <section className="mb-10 flex gap-3">
+        <section className="mb-10 flex flex-wrap gap-3">
           <Link
             href={`/recipe/${id}/cook`}
-            className="flex items-center gap-2 px-5 py-3 font-display font-semibold text-white transition-all hover:translate-y-[-2px] rounded-lg"
-            style={{ background: 'var(--terracotta)' }}
+            className="btn-candy flex items-center gap-2 px-6 py-3 text-white"
+            style={{ background: 'var(--berry)' }}
           >
             <CookingPot size={22} weight="bold" />
             Cook
           </Link>
           <Link
             href={`/recipe/${id}/cook?chat=true`}
-            className="flex items-center gap-2 px-5 py-3 font-display font-semibold transition-all hover:translate-y-[-2px] rounded-lg border-2"
-            style={{ borderColor: 'var(--ink)', color: 'var(--ink)' }}
+            className="btn-candy flex items-center gap-2 px-6 py-3"
+            style={{ background: 'var(--card)', color: 'var(--ink)' }}
           >
             <ChatCircle size={22} weight="bold" />
             Chat
           </Link>
+          <button
+            onClick={handleRetryExtraction}
+            disabled={isExtracting}
+            className="btn-candy flex items-center gap-2 px-6 py-3"
+            style={{ background: 'var(--butter)', color: 'var(--ink)' }}
+            title="Run the AI extraction again"
+          >
+            <ArrowsClockwise size={22} weight="bold" className={isExtracting ? "animate-spin" : ""} />
+            {isExtracting ? "Re-running…" : "Re-run AI"}
+          </button>
         </section>
       )}
 
       {/* Video Embed — Shorts are vertical, so use a 9:16 frame for them */}
       <section className="mb-12">
         {recipe.isShort ? (
-          <div className="border-recipe bg-black max-w-[300px] mx-auto">
+          <div className="candy-card overflow-hidden bg-black max-w-[300px] mx-auto">
             <div className="relative aspect-[9/16]">
               <iframe
                 src={`https://www.youtube.com/embed/${recipe.videoId}`}
@@ -167,7 +178,7 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
             </div>
           </div>
         ) : (
-          <div className="border-recipe bg-black">
+          <div className="candy-card overflow-hidden bg-black">
             <div className="video-container">
               <iframe
                 src={`https://www.youtube.com/embed/${recipe.videoId}`}
@@ -182,30 +193,30 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
 
       {/* AI Recipe Section - Primary Content */}
       <section className="mb-12">
-        {(recipe.aiRecipeStatus === "pending" || recipe.aiRecipeStatus === "processing") && (
-          <div className="border-2 border-dashed border-[var(--sage)] bg-[var(--sage)]/10 p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[var(--sage)] border-t-transparent mb-4" />
-            <p className="font-display text-lg" style={{ color: 'var(--ink)' }}>
+        {isExtracting && (
+          <div className="candy-card border-dashed p-8 text-center mb-6" style={{ background: 'var(--pistachio-soft)' }}>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-t-transparent mb-4" style={{ borderColor: 'var(--pistachio)', borderTopColor: 'transparent' }} />
+            <p className="font-display text-lg font-bold" style={{ color: 'var(--ink)' }}>
               Extracting recipe with AI...
             </p>
-            <p className="text-sm mt-2" style={{ color: 'var(--ink-light)' }}>
+            <p className="text-sm font-semibold mt-2" style={{ color: 'var(--muted)' }}>
               Analyzing transcript, description, and comments
             </p>
           </div>
         )}
 
         {recipe.aiRecipeStatus === "failed" && (
-          <div className="border-2 border-dashed border-[var(--terracotta)] bg-[var(--terracotta)]/10 p-8 text-center">
-            <p className="font-display text-lg mb-2" style={{ color: 'var(--ink)' }}>
-              Couldn't extract recipe automatically
+          <div className="candy-card p-8 text-center" style={{ background: 'var(--berry-soft)' }}>
+            <p className="font-display text-lg font-bold mb-2" style={{ color: 'var(--ink)' }}>
+              Couldn&apos;t extract recipe automatically
             </p>
-            <p className="text-sm mb-4" style={{ color: 'var(--ink-light)' }}>
+            <p className="text-sm font-semibold mb-4" style={{ color: 'var(--muted)' }}>
               {recipe.aiRecipeError || "The video may not contain a clear recipe"}
             </p>
             <button
               onClick={handleRetryExtraction}
-              className="px-4 py-2 font-display text-sm text-white transition-all hover:translate-y-[-2px]"
-              style={{ background: 'var(--terracotta)' }}
+              className="btn-candy px-5 py-2.5 text-white"
+              style={{ background: 'var(--berry)' }}
             >
               Try Again
             </button>
@@ -213,33 +224,30 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
         )}
 
         {hasAIRecipe && recipe.aiRecipe && (
-          <div className="border-2 border-[var(--sage)] bg-white p-6 sm:p-8">
+          <div className="candy-card p-6 sm:p-8">
             {/* Recipe Meta */}
             {(recipe.aiRecipe.prepTime || recipe.aiRecipe.cookTime || recipe.aiRecipe.servings) && (
-              <div className="flex flex-wrap gap-4 mb-6 pb-6 border-b border-[var(--ink-light)]/30">
+              <div className="flex flex-wrap gap-2 mb-6">
                 {recipe.aiRecipe.prepTime && (
-                  <div>
-                    <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--ink-light)' }}>Prep</span>
-                    <p className="font-display font-medium" style={{ color: 'var(--ink)' }}>{recipe.aiRecipe.prepTime}</p>
-                  </div>
+                  <span className="chip" style={{ background: 'var(--berry-soft)' }}>
+                    prep · {recipe.aiRecipe.prepTime}
+                  </span>
                 )}
                 {recipe.aiRecipe.cookTime && (
-                  <div>
-                    <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--ink-light)' }}>Cook</span>
-                    <p className="font-display font-medium" style={{ color: 'var(--ink)' }}>{recipe.aiRecipe.cookTime}</p>
-                  </div>
+                  <span className="chip" style={{ background: 'var(--butter)' }}>
+                    cook · {recipe.aiRecipe.cookTime}
+                  </span>
                 )}
                 {recipe.aiRecipe.servings && (
-                  <div>
-                    <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--ink-light)' }}>Servings</span>
-                    <p className="font-display font-medium" style={{ color: 'var(--ink)' }}>{recipe.aiRecipe.servings}</p>
-                  </div>
+                  <span className="chip" style={{ background: 'var(--pistachio-soft)' }}>
+                    serves · {recipe.aiRecipe.servings}
+                  </span>
                 )}
               </div>
             )}
 
             {recipe.aiRecipe.description && (
-              <p className="mb-6 italic" style={{ color: 'var(--ink-light)' }}>
+              <p className="mb-6 italic" style={{ color: 'var(--muted)' }}>
                 {recipe.aiRecipe.description}
               </p>
             )}
@@ -247,13 +255,13 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
             {/* Ingredients */}
             {recipe.aiRecipe.ingredients.length > 0 && (
               <div className="mb-8">
-                <h2 className="font-display text-2xl font-bold mb-4" style={{ color: 'var(--ink)' }}>
+                <h2 className="font-display text-2xl font-black mb-4" style={{ color: 'var(--ink)' }}>
                   Ingredients
                 </h2>
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {recipe.aiRecipe.ingredients.map((ingredient, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--sage)' }} />
+                      <span className="mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0 border-2" style={{ background: 'var(--pistachio)', borderColor: 'var(--ink)' }} />
                       <span style={{ color: 'var(--ink)' }}>{ingredient}</span>
                     </li>
                   ))}
@@ -264,15 +272,15 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
             {/* Instructions */}
             {recipe.aiRecipe.instructions.length > 0 && (
               <div>
-                <h2 className="font-display text-2xl font-bold mb-4" style={{ color: 'var(--ink)' }}>
+                <h2 className="font-display text-2xl font-black mb-4" style={{ color: 'var(--ink)' }}>
                   Instructions
                 </h2>
                 <ol className="space-y-4">
                   {recipe.aiRecipe.instructions.map((step, i) => (
                     <li key={i} className="flex items-start gap-4">
-                      <span 
-                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-display font-bold text-white leading-none"
-                        style={{ background: 'var(--terracotta)' }}
+                      <span
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-display font-bold text-white leading-none border-2"
+                        style={{ background: 'var(--berry)', borderColor: 'var(--ink)' }}
                       >
                         <span className="-mt-0.5">{i + 1}</span>
                       </span>
@@ -285,35 +293,28 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
 
             {/* What the AI actually worked from, so it's obvious when the
                 transcript couldn't be fetched */}
-            <div className="mt-8 pt-4 border-t border-[var(--ink-light)]/30 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs" style={{ color: 'var(--ink-light)' }}>
+            <div className="mt-8 pt-4 border-t-2 border-dashed flex flex-wrap items-center justify-between gap-2" style={{ borderColor: 'var(--muted)' }}>
+              <p className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>
                 {recipe.extractionSources?.length
                   ? `Extracted from: ${recipe.extractionSources.join(" · ")}`
                   : "Extracted before source tracking was added"}
                 {recipe.extractionSources?.length && !recipe.extractionSources.includes("transcript") ? (
-                  <span style={{ color: 'var(--terracotta)' }}> — no transcript was available</span>
+                  <span style={{ color: 'var(--berry-deep)' }}> — no transcript was available</span>
                 ) : null}
               </p>
-              <button
-                onClick={handleRetryExtraction}
-                className="text-xs underline decoration-1 underline-offset-2 hover:no-underline"
-                style={{ color: 'var(--ink-light)' }}
-              >
-                Re-extract
-              </button>
             </div>
           </div>
         )}
 
         {!recipe.aiRecipeStatus && !hasAIRecipe && (
-          <div className="border-2 border-dashed border-[var(--ink-light)] p-8 text-center">
-            <p className="font-display text-lg mb-4" style={{ color: 'var(--ink)' }}>
+          <div className="candy-card p-8 text-center">
+            <p className="font-display text-lg font-bold mb-4" style={{ color: 'var(--ink)' }}>
               No AI recipe extracted yet
             </p>
             <button
               onClick={handleRetryExtraction}
-              className="px-4 py-2 font-display text-sm text-white transition-all hover:translate-y-[-2px]"
-              style={{ background: 'var(--sage)' }}
+              className="btn-candy px-5 py-2.5 text-white"
+              style={{ background: 'var(--pistachio)' }}
             >
               Extract Recipe with AI
             </button>
@@ -323,11 +324,11 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
 
       {/* Original Content - Collapsible */}
       {(recipe.description || recipe.ownerComment) && (
-        <section className="mb-12 space-y-3">
-          <h2 className="font-display text-sm uppercase tracking-wide mb-4" style={{ color: 'var(--ink-light)' }}>
+        <section className="mb-12 space-y-4">
+          <h2 className="font-display text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--muted)' }}>
             Original Video Content
           </h2>
-          
+
           {recipe.description && (
             <CollapsibleSection title="Video Description" defaultOpen={false}>
               <p className="whitespace-pre-wrap leading-relaxed text-sm" style={{ color: 'var(--ink)' }}>
@@ -335,7 +336,7 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
               </p>
             </CollapsibleSection>
           )}
-          
+
           {recipe.ownerComment && (
             <CollapsibleSection title="Pinned Comment" defaultOpen={false}>
               <p className="whitespace-pre-wrap leading-relaxed text-sm" style={{ color: 'var(--ink)' }}>
@@ -348,35 +349,35 @@ export default function RecipePage({ params }: { params: Promise<{ id: string }>
 
       {/* Original Link */}
       <section className="mb-12">
-        <a 
-          href={recipe.url} 
-          target="_blank" 
+        <a
+          href={recipe.url}
+          target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-3 px-6 py-3 font-display font-semibold text-white transition-all hover:translate-y-[-2px]"
-          style={{ background: 'var(--terracotta)' }}
+          className="btn-candy inline-flex items-center gap-3 px-6 py-3"
+          style={{ background: 'var(--card)', color: 'var(--ink)' }}
         >
-          Watch on YouTube
+          ▶ Watch on YouTube
         </a>
       </section>
 
       {/* Divider */}
-      <div className="h-px my-12" style={{ background: 'var(--ink-light)' }} />
+      <div className="divider-wave my-12" />
 
       {/* Actions */}
       <section className="flex justify-between items-center">
-        <p className="text-sm" style={{ color: 'var(--ink-light)' }}>
-          Saved {new Date(recipe._creationTime).toLocaleDateString('en-US', { 
-            month: 'numeric', 
+        <p className="text-sm font-semibold" style={{ color: 'var(--muted)' }}>
+          Saved {new Date(recipe._creationTime).toLocaleDateString('en-US', {
+            month: 'numeric',
             day: 'numeric',
             year: '2-digit'
           })}
         </p>
         <button
           onClick={handleDelete}
-          className="text-sm underline decoration-1 underline-offset-2 hover:no-underline transition-all"
-          style={{ color: 'var(--ink-light)' }}
+          className="text-sm font-semibold underline decoration-2 underline-offset-2 hover:no-underline transition-all"
+          style={{ color: 'var(--berry-deep)' }}
         >
-          Delete from collection
+          Delete from the box
         </button>
       </section>
     </main>

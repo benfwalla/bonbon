@@ -1,17 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..700&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   bonbon season two — "modern patisserie"
+   warm milk · cocoa ink · raspberry · pistachio · butter
+   ============================================ */
+
 :root {
-  --cream: #FDF6E9;
-  --cream-dark: #F5ECD9;
-  --ink: #2C2416;
-  --ink-light: #5C5040;
-  --terracotta: #C4683C;
-  --terracotta-light: #E8A878;
-  --sage: #7A8B6E;
+  --bg: #FFF3E9;          /* warm milk */
+  --card: #FFFFFF;
+  --ink: #2A1810;         /* dark cocoa */
+  --muted: #8A6F5F;       /* café au lait */
+  --berry: #D6336C;       /* raspberry — primary */
+  --berry-deep: #A61E4D;
+  --berry-soft: #FADCE7;
+  --pistachio: #5C8D57;
+  --pistachio-soft: #E3EFDD;
+  --butter: #F5B841;
+  --cocoa-dark: #1D110B;  /* cook mode */
 }
 
 * {
@@ -19,16 +28,17 @@
 }
 
 body {
-  font-family: 'Source Serif 4', Georgia, serif;
-  background: var(--cream);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
   color: var(--ink);
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  background-blend-mode: soft-light;
-  background-size: 150px;
+  /* faint candy sprinkles */
+  background-image: radial-gradient(rgba(214, 51, 108, 0.07) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
 }
 
 .font-display {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: 'opsz' 72;
 }
 
 /* Custom scrollbar */
@@ -37,36 +47,65 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--cream-dark);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--ink-light);
+  background: var(--muted);
   border-radius: 4px;
 }
 
-/* Recipe card hover effect */
-.recipe-card {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+/* Sticker cards — the core season-two surface */
+.candy-card {
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 5px 6px 0 rgba(42, 24, 16, 0.9);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
 }
 
-.recipe-card:hover {
-  transform: translateY(-4px) rotate(-0.5deg);
-  box-shadow: 8px 12px 24px rgba(44, 36, 22, 0.12);
+.candy-card--hover:hover {
+  transform: translate(-2px, -3px) rotate(-0.4deg);
+  box-shadow: 8px 10px 0 rgba(42, 24, 16, 0.9);
 }
 
-/* Decorative border */
-.border-recipe {
-  border: 1px solid var(--ink);
-  position: relative;
+/* Pill buttons with a pressed state */
+.btn-candy {
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-weight: 700;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 
-.border-recipe::before {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border: 1px solid var(--ink-light);
-  pointer-events: none;
+.btn-candy:hover {
+  filter: brightness(1.05);
+}
+
+.btn-candy:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn-candy:disabled {
+  opacity: 0.5;
+}
+
+.btn-candy:disabled:active {
+  transform: none;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+/* Little meta chips (prep/cook/servings) */
+.chip {
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 /* Video embed container */
@@ -98,12 +137,21 @@ body {
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--terracotta);
+  background: var(--berry);
   transition: width 0.3s ease;
 }
 
 .link-underline:hover::after {
   width: 100%;
+}
+
+/* Wavy divider — candy-wrapper crimp */
+.divider-wave {
+  height: 8px;
+  background-image: radial-gradient(circle at 6px -2px, transparent 6px, var(--muted) 6px, var(--muted) 8px, transparent 8px);
+  background-size: 20px 12px;
+  background-repeat: repeat-x;
+  opacity: 0.35;
 }
 
 /* Safe areas for notch/home indicator */

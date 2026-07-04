@@ -218,8 +218,8 @@ function CookMode({ id }: { id: string }) {
 
   if (recipe === undefined || !hasCookableRecipe) {
     return (
-      <div className="h-[100dvh] w-full bg-[var(--ink)] flex items-center justify-center">
-        <CookingPot size={48} className="animate-pulse" style={{ color: 'var(--terracotta)' }} />
+      <div className="h-[100dvh] w-full bg-[var(--cocoa-dark)] flex items-center justify-center">
+        <CookingPot size={48} className="animate-pulse" style={{ color: 'var(--berry)' }} />
       </div>
     );
   }
@@ -271,7 +271,7 @@ function CookMode({ id }: { id: string }) {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-[var(--ink)] text-white flex flex-col overflow-hidden">
+    <div className="h-[100dvh] w-full bg-[var(--cocoa-dark)] text-white flex flex-col overflow-hidden">
       {/* Header */}
       <header className="flex-none flex items-center justify-between px-4 py-3 safe-top">
         <button
@@ -292,7 +292,7 @@ function CookMode({ id }: { id: string }) {
           {timer.done ? (
             <button
               onClick={() => setTimer(null)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--terracotta)] text-white font-semibold animate-pulse"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--berry)] text-white font-semibold animate-pulse"
             >
               <Timer size={18} weight="fill" />
               Time&apos;s up — {timer.label} (step {timer.step}) · tap to dismiss
@@ -304,7 +304,7 @@ function CookMode({ id }: { id: string }) {
               }}
               className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-sm"
             >
-              <Timer size={16} className="text-[var(--terracotta)]" weight="fill" />
+              <Timer size={16} className="text-[var(--butter)]" weight="fill" />
               <span className="tabular-nums font-semibold">{formatCountdown(remainingSeconds)}</span>
               <span className="text-white/50">{timer.label} · step {timer.step}</span>
               <X size={14} className="text-white/50" />
@@ -326,10 +326,10 @@ function CookMode({ id }: { id: string }) {
 
         {/* Step content */}
         <div className="flex flex-col items-center justify-center text-center px-12 max-w-lg">
-          <div className="text-sm uppercase tracking-wide text-white/40 mb-4">
+          <div className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--butter)' }}>
             Step {currentStep + 1} of {totalSteps}
           </div>
-          <p className="text-xl sm:text-2xl leading-relaxed">
+          <p className="font-display text-2xl sm:text-3xl font-semibold leading-relaxed">
             {instructions[currentStep]}
           </p>
           {/* One-tap timers detected in this step */}
@@ -339,7 +339,7 @@ function CookMode({ id }: { id: string }) {
                 <button
                   key={t.seconds}
                   onClick={() => startTimer(t.label, t.seconds)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--terracotta)] text-[var(--terracotta)] text-sm font-semibold hover:bg-[var(--terracotta)] hover:text-white transition-colors"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full border-2 border-[var(--butter)] text-[var(--butter)] text-sm font-bold hover:bg-[var(--butter)] hover:text-[var(--cocoa-dark)] transition-colors"
                 >
                   <Timer size={16} weight="bold" />
                   {t.label}
@@ -376,7 +376,7 @@ function CookMode({ id }: { id: string }) {
               <button
                 key={i}
                 onClick={() => setCurrentStep(i)}
-                className={`w-2 h-2 rounded-full transition-colors ${i === currentStep ? 'bg-[var(--terracotta)]' : 'bg-white/30'}`}
+                className={`w-2 h-2 rounded-full transition-colors ${i === currentStep ? 'bg-[var(--berry)]' : 'bg-white/30'}`}
               />
             ))}
           </div>
@@ -384,7 +384,7 @@ function CookMode({ id }: { id: string }) {
           <div className="flex-1 mx-4 max-w-[160px]">
             <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
               <div
-                className="h-full rounded-full bg-[var(--terracotta)] transition-all"
+                className="h-full rounded-full bg-[var(--berry)] transition-all"
                 style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
               />
             </div>
@@ -394,7 +394,7 @@ function CookMode({ id }: { id: string }) {
         {/* Chat button */}
         <button
           onClick={() => setShowChat(true)}
-          className="p-3 rounded-full bg-[var(--terracotta)] hover:brightness-110 transition-all"
+          className="p-3 rounded-full bg-[var(--berry)] hover:brightness-110 transition-all"
         >
           <ChatCircle size={24} weight="fill" />
         </button>
@@ -404,7 +404,7 @@ function CookMode({ id }: { id: string }) {
       <Drawer.Root open={showIngredients} onOpenChange={setShowIngredients}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/60 z-40" />
-          <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-[var(--ink)] border-t border-white/10 rounded-t-2xl max-h-[70dvh] flex flex-col">
+          <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-[var(--cocoa-dark)] border-t border-white/10 rounded-t-3xl max-h-[70dvh] flex flex-col">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/20 mt-3 mb-2" />
             <Drawer.Title className="font-display font-semibold px-4 pb-3 text-white border-b border-white/10">
               Ingredients
@@ -417,8 +417,8 @@ function CookMode({ id }: { id: string }) {
                       onClick={() => toggleIngredient(i)}
                       className={`text-left w-full flex items-start gap-3 ${checkedIngredients.has(i) ? 'text-white/40 line-through' : 'text-white'}`}
                     >
-                      <span className={`mt-0.5 w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center ${checkedIngredients.has(i) ? 'bg-[var(--sage)] border-[var(--sage)]' : 'border-white/40'}`}>
-                        {checkedIngredients.has(i) && <span className="text-[var(--ink)] text-xs font-bold">✓</span>}
+                      <span className={`mt-0.5 w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center ${checkedIngredients.has(i) ? 'bg-[var(--pistachio)] border-[var(--pistachio)]' : 'border-white/40'}`}>
+                        {checkedIngredients.has(i) && <span className="text-[var(--cocoa-dark)] text-xs font-bold">✓</span>}
                       </span>
                       <span>{ing}</span>
                     </button>
@@ -434,7 +434,7 @@ function CookMode({ id }: { id: string }) {
       <Drawer.Root open={showChat} onOpenChange={setShowChat}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/60 z-40" />
-          <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-[var(--ink)] border-t border-white/10 rounded-t-2xl h-[70dvh] flex flex-col">
+          <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-[var(--cocoa-dark)] border-t border-white/10 rounded-t-3xl h-[70dvh] flex flex-col">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/20 mt-3 mb-2" />
             <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10">
               <Drawer.Title className="font-display font-semibold text-white">Recipe Chat</Drawer.Title>
@@ -468,7 +468,7 @@ function CookMode({ id }: { id: string }) {
                 >
                   <span className={`inline-block px-4 py-2.5 rounded-2xl max-w-[85%] text-sm ${
                     msg.role === 'user'
-                      ? 'bg-[var(--terracotta)] text-white'
+                      ? 'bg-[var(--berry)] text-white'
                       : 'bg-white/10 text-white'
                   }`}>
                     {msg.content}
@@ -477,7 +477,7 @@ function CookMode({ id }: { id: string }) {
               ))}
               {pendingMessage && (
                 <div className="text-right">
-                  <span className="inline-block px-4 py-2.5 rounded-2xl max-w-[85%] text-sm bg-[var(--terracotta)] text-white opacity-80">
+                  <span className="inline-block px-4 py-2.5 rounded-2xl max-w-[85%] text-sm bg-[var(--berry)] text-white opacity-80">
                     {pendingMessage}
                   </span>
                 </div>
@@ -490,7 +490,7 @@ function CookMode({ id }: { id: string }) {
                 </div>
               )}
               {chatError && (
-                <p className="text-center text-sm text-[var(--terracotta-light)]">
+                <p className="text-center text-sm text-[var(--berry-soft)]">
                   {chatError}
                 </p>
               )}
@@ -510,13 +510,13 @@ function CookMode({ id }: { id: string }) {
                     }
                   }}
                   placeholder="Ask about substitutes, tips..."
-                  className="flex-1 bg-white/10 rounded-full px-4 py-3 text-base placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--terracotta)] text-white"
+                  className="flex-1 bg-white/10 rounded-full px-4 py-3 text-base placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--berry)] text-white"
                   autoComplete="off"
                 />
                 <button
                   onClick={handleSendChat}
                   disabled={!chatInput.trim() || chatLoading}
-                  className="p-3 bg-[var(--terracotta)] rounded-full disabled:opacity-50 hover:brightness-110 transition-all"
+                  className="p-3 bg-[var(--berry)] rounded-full disabled:opacity-50 hover:brightness-110 transition-all"
                 >
                   <PaperPlaneTilt size={20} />
                 </button>
@@ -535,8 +535,8 @@ export default function CookModePage({ params }: { params: Promise<{ id: string 
   return (
     <Suspense
       fallback={
-        <div className="h-[100dvh] w-full bg-[var(--ink)] flex items-center justify-center">
-          <CookingPot size={48} className="animate-pulse" style={{ color: 'var(--terracotta)' }} />
+        <div className="h-[100dvh] w-full bg-[var(--cocoa-dark)] flex items-center justify-center">
+          <CookingPot size={48} className="animate-pulse" style={{ color: 'var(--berry)' }} />
         </div>
       }
     >
